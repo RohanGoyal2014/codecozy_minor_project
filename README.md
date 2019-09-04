@@ -23,4 +23,6 @@
   References: https://www.youtube.com/watch?v=BVyesPHthoQ
   </li>
   <li> Click on add custom domain and type in your domain and select cname from dropdown and click on add custom domain
+    </li>
+  <li>Get SSL using cloudflare</li>
 </ul>
