@@ -1,6 +1,7 @@
 package tech.codecozy.app;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -9,6 +10,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+
+import com.google.gson.Gson;
 
 @WebServlet("/accounts")
 public class AccountsServlet extends HttpServlet {
@@ -22,7 +25,6 @@ public class AccountsServlet extends HttpServlet {
 
 	@Override
 	public void init() throws ServletException {
-		// TODO Auto-generated method stub
 		super.init();
 		
 		try {
@@ -37,18 +39,29 @@ public class AccountsServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		
 		HttpSession session = request.getSession(false);
-		
-		if(session == null) {	
-			RequestDispatcher rd = request.getRequestDispatcher("accounts.jsp");
-			rd.forward(request, response);
-		} else {
-			if(session.getAttribute("user") == null) {
+		try {
+			if(session == null) {	
 				RequestDispatcher rd = request.getRequestDispatcher("accounts.jsp");
 				rd.forward(request, response);
 			} else {
-				response.sendRedirect("dashboard");
-				return;
+				if(session.getAttribute("user") == null) {
+					String action = request.getParameter("action");
+					String user = request.getParameter("user");
+					if(action != null && action.equals("resetPassword") && user!=null && dbUtil.emailExists(new CryptoUtil().urlSafeDecrypt(CryptoUtil.KEY, user))) {
+						RequestDispatcher rd = request.getRequestDispatcher("resetpasswordpage.jsp");
+						request.setAttribute("USER", user);
+						rd.forward(request, response);
+					} else {
+						RequestDispatcher rd = request.getRequestDispatcher("accounts.jsp");
+						rd.forward(request, response);
+					}
+				} else {
+					response.sendRedirect("dashboard");
+					return;
+				}
 			}
+		} catch(Exception e) {
+			e.printStackTrace();
 		}
 		
 	}
@@ -66,6 +79,15 @@ public class AccountsServlet extends HttpServlet {
 					break;
 				case "register":
 					performRegister(request,response);
+					break;
+				case "forgot":
+					recoverAccount(request, response);
+					break;
+				case "resetPassword":
+					resetPasswordFromLink(request, response);
+					break;
+				case "api_usernames":
+					getStoredUserNames(request, response);
 					break;
 				default:
 					doGet(request,response);
@@ -166,9 +188,75 @@ public class AccountsServlet extends HttpServlet {
 				request.setAttribute("MESSAGE","Registration Successful. You can continue to login.");
 			}
 		}
+//		System.out.println(request.getAttribute("ERROR"));
 		RequestDispatcher rd = request.getRequestDispatcher("accounts.jsp");
 		rd.forward(request, response);
 	}
+	
+	public void recoverAccount(HttpServletRequest request, HttpServletResponse response)throws Exception {
+		
+		String email = request.getParameter("fg_email");
+//		System.out.println(getBaseUrl(request));
+		if(email == null) {
+			//Skip
+		} else {
+			email = email.strip();
+			if(dbUtil.emailExists(email)) {
+				String subject = "Codecozy-Password Recovery";
+				String content = "Here is your reset password link: \n";
+				String link = getBaseUrl(request)+"/accounts?action=resetPassword&user="
+						+ new CryptoUtil().urlSafeEncrypt(CryptoUtil.KEY, email);
+				content += link;
+				MailUtil.send(email, subject, content);
+			}
+		}
+		//Adding mode 3 for identifying forgot password tab on accounts.jsp
+		request.setAttribute("MODE", 3);
+		RequestDispatcher rd = request.getRequestDispatcher("accounts.jsp");
+		rd.forward(request, response);
+	}
+	
+	public void resetPasswordFromLink(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		String user = request.getParameter("user");
+		String password = request.getParameter("rst_password");
+		String confirmPassword = request.getParameter("rst_cpassword");
+		if(user == null) {
+			request.setAttribute("ERROR", "Orphan request");
+		} else if(confirmPassword == null || password == null) {
+			request.setAttribute("ERROR", "Input fields can not be null");
+		} else {
+			user = new CryptoUtil().urlSafeDecrypt(CryptoUtil.KEY, user);
+			if(password.length()<8) {
+				request.setAttribute("ERROR", "Password must at least be of 8 characters");
+			} else if(!password.equals(confirmPassword)) {
+				request.setAttribute("ERROR", "Password and Confirm Password must match");
+			} else if(!dbUtil.emailExists(user)) {
+				request.setAttribute("ERROR", "Unable to detect user");
+			} else {
+				dbUtil.updatePassword(user, password);
+				request.setAttribute("MESSAGE", "Password Reset Successful");
+			}
+		}
+		RequestDispatcher rd = request.getRequestDispatcher("resetpasswordpage.jsp");
+		rd.forward(request, response);
+	}
+	
+	public void getStoredUserNames(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		ArrayList<String> usernames = dbUtil.getUsernames();
+		Gson gson = new Gson();
+//		System.out.println("received");
+		String json = gson.toJson(usernames);
+//		System.out.println(json);
+		response.getWriter().write(json);
+	}
+	
+	public static String getBaseUrl(HttpServletRequest request) {
+	    String scheme = request.getScheme() + "://";
+	    String serverName = request.getServerName();
+	    String serverPort = (request.getServerPort() == 80) ? "" : ":" + request.getServerPort();
+	    String contextPath = request.getContextPath();
+	    return scheme + serverName + serverPort + contextPath;
+	  }
 		
 	boolean isValidUserNameFormat(String username) {
 		for(int i=0;i<username.length();++i) {

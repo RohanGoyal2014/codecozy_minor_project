@@ -1,25 +1,13 @@
 package tech.codecozy.app;
 
-import java.security.MessageDigest;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 
 public class DBUtil {
 	
 	public DBUtil() {}
-	
-	public static String cryptWithMD5(String pass) throws Exception{
-		MessageDigest md = MessageDigest.getInstance("MD5");
-	    byte[] passBytes = pass.getBytes();
-	    md.reset();
-	    byte[] digested = md.digest(passBytes);
-	    StringBuffer sb = new StringBuffer();
-	    for(int i=0;i<digested.length;i++){
-	        sb.append(Integer.toHexString(0xff & digested[i]));
-	    }
-	    return sb.toString();
-	}
 	
 	public boolean checkLoginCredentials(String email, String password){
 		
@@ -33,7 +21,7 @@ public class DBUtil {
 			String sql = "select count(*) 'user_count' from cp_user where cp_email = ? and cp_password = ?";			
 			stmt = conn.prepareStatement(sql);
 			stmt.setString(1, email);
-			stmt.setString(2, cryptWithMD5(password));
+			stmt.setString(2, new CryptoUtil().encrypt(CryptoUtil.KEY, password));
 			rs = stmt.executeQuery();
 			
 			if(rs.next()) {
@@ -84,7 +72,7 @@ public class DBUtil {
 		
 	}
 	
-public boolean usernameExists(String username) {
+	public boolean usernameExists(String username) {
 		
 		Connection conn = null;
 		PreparedStatement stmt = null;
@@ -124,7 +112,7 @@ public boolean usernameExists(String username) {
 		try {
 			conn = CloudConfig.getConnection();
 			
-			String cryptPass = cryptWithMD5(user.getPassword());
+			String cryptPass = new CryptoUtil().encrypt(CryptoUtil.KEY,user.getPassword());
 			user.setPassword(cryptPass);
 			
 			String sql = "insert into "
@@ -145,5 +133,59 @@ public boolean usernameExists(String username) {
 		} finally {
 			CloudConfig.close(conn, stmt, rs);
 		}
+	}
+	
+	public void updatePassword(String email, String password) {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			password = new CryptoUtil().encrypt(CryptoUtil.KEY,password);
+			
+			String sql = "update cp_user set cp_password=? where "
+					+ "cp_email=?";
+			
+			stmt = conn.prepareStatement(sql);
+			stmt.setString(1, password);
+			stmt.setString(2, email);
+			stmt.execute();
+				
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
+	}
+	
+	public ArrayList<String> getUsernames() {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		ArrayList<String> result = new ArrayList<>();
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			String sql = "select cp_username from cp_user";
+			
+			stmt = conn.prepareStatement(sql);
+		
+			rs = stmt.executeQuery();
+			
+			while(rs.next()) {
+				String username = rs.getString("cp_username");
+				result.add(username);
+			}
+				
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
+		
+		return result;
 	}
 }

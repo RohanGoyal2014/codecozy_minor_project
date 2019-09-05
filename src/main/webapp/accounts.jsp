@@ -17,6 +17,7 @@
 				<div class="nav nav-tabs" id="nav-tab" role="tablist">
 		    		<a class="nav-item nav-link active" id="nav-home-tab" data-toggle="tab" href="#nav-home" role="tab" aria-controls="nav-home" aria-selected="true">Login</a>
 		    		<a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#nav-profile" role="tab" aria-controls="nav-profile" aria-selected="false">Register</a>
+		    		<a class="nav-item nav-link" id="nav-forgot-tab" data-toggle="tab" href="#nav-forgot" role="tab" aria-controls="nav-forgot" aria-selected="false">Forgot Password</a>
 		    	</div>
 
 			</nav>
@@ -52,7 +53,7 @@
 			  			<c:if test="${ MODE == 2 }">
 				  			<c:if test="${ERROR != null }">
 					  			<ul>
-					  				<li style="color:white">Error: ${ ERROR } </li>
+					  				<li style="color:red">Error: ${ ERROR } </li>
 					  			</ul>
 			  				</c:if>
 			  				<h4> ${MESSAGE}</h4>
@@ -81,7 +82,8 @@
 					  	</div>
 					  	<div class="form-group">
 					    	<label for="rg_uname">Preferred Username</label>
-					    	<input type="text" class="form-control" id="rg_uname" name="rg_uname" required>
+					    	<input type="text" class="form-control" id="rg_uname" onkeyup="checkUsername(this)" name="rg_uname" required>
+					  		<p id="usernames" style="display:none">...</p>
 					  	</div>
 					  	<div class="form-group">
 					    	<label for="rg_password">Password</label>
@@ -95,16 +97,71 @@
 					  		<button class="btn btn-primary" type="submit" style="background:#FF9800;border:#FF9800">Register</button>
 					</form>
 			  	</div>
+			  	<div class="tab-pane fade" id="nav-forgot" role="tabpanel" aria-labelledby="nav-forgot-tab">
+			  		<form method="post">
+			  			<br>
+			  			<b>If your email exists we will send you a reset mail</b>
+			  			<c:if test="${ MODE == 3 }">
+				  			<h4> Email Sent. If you do not receive mail, try entering your email again or contact administrator </h4>
+			  			</c:if>
+			  			<input type="hidden" name="command" value="forgot">
+					  	<div class="form-group">
+					    	<label for="fg_email">Email</label>
+					    	<input type="email" class="form-control" id="fg_email" name="fg_email" required>
+					  	</div>
+					  	<button class="btn btn-primary" type="submit" style="background:#FF9800;border:#FF9800">Forgot Password</button>
+					</form>
+			  	</div>
 			</div>
 		</div>
-		<c:if test="${ MODE == 2 }">
-		    <script>
-		    	function simulateClick() {
-		   			document.getElementById('nav-profile-tab').click();
-		    	}
-		    	simulateClick();
-		    			
-		    </script>
-		</c:if>
+		<br><br><br><br>
+		<c:choose>
+			<c:when test="${ MODE == 2 }">
+			    <script>
+			    	function simulateClick() {
+			   			document.getElementById('nav-profile-tab').click();
+			    	}
+			    	simulateClick();
+			    			
+			    </script>
+			</c:when>
+			<c:when test="${ MODE == 3 }">
+			    <script>
+			    	function simulateClick() {
+			   			document.getElementById('nav-forgot-tab').click();
+			    	}
+			    	simulateClick();
+			    			
+			    </script>
+			</c:when>
+		</c:choose>
+		<script>
+			function checkUsername(obj) {
+				document.getElementById('usernames').innerHTML = "Checking...";
+				document.getElementById('usernames').style.display = "block";
+				var text = obj.value;
+				//console.log(text);
+				var found = false;
+				if(text.length === 0) {
+					document.getElementById('usernames').style.display = "";
+				}
+				$.post( "accounts", { command: "api_usernames"}, function(data) {
+					//console.log(data);
+					data = JSON.parse(data);
+					for(var i=0;i<data.length;++i) {
+						if(data[i] === text) {
+							//console.log('match');
+							found = true;
+							break
+						}
+					}
+					if(found === true) {
+						document.getElementById('usernames').innerHTML="Not Allowed";	
+					} else {
+						document.getElementById('usernames').innerHTML="Allowed";
+					}
+				});
+			}
+		</script>
 	</body>
 </html>
