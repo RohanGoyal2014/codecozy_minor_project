@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <!DOCTYPE html>
 <html>
 	<head>
@@ -13,15 +14,21 @@
 		</div>
 		<div class="container">
 			<nav>
-  				<div class="nav nav-tabs" id="nav-tab" role="tablist">
-    				<a class="nav-item nav-link active" id="nav-home-tab" data-toggle="tab" href="#nav-home" role="tab" aria-controls="nav-home" aria-selected="true">Login</a>
-    				<a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#nav-profile" role="tab" aria-controls="nav-profile" aria-selected="false">Register</a>
-    			</div>
+				<div class="nav nav-tabs" id="nav-tab" role="tablist">
+		    		<a class="nav-item nav-link active" id="nav-home-tab" data-toggle="tab" href="#nav-home" role="tab" aria-controls="nav-home" aria-selected="true">Login</a>
+		    		<a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#nav-profile" role="tab" aria-controls="nav-profile" aria-selected="false">Register</a>
+		    	</div>
+
 			</nav>
 			<div class="tab-content" id="nav-tabContent">
 			  	<div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
 			  		<form method="post">
 			  			<br>
+			  			<c:if test="${ MODE == 1 }">
+				  			<ul>
+				  				<li> Error: ${ ERROR }</li> 
+				  			</ul>
+			  			</c:if>
 			  			<input type="hidden" name="command" value="login">
 					  	<div class="form-group">
 					    	<label for="lg_email">Email</label>
@@ -36,9 +43,21 @@
 			  	</div>
 			  	<div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab">
 			  		<form method="post">
+			  			<br>
 			 			<strong>
 			  				All fields are required
 			  			</strong>
+			  			<br>
+			  			<br>
+			  			<c:if test="${ MODE == 2 }">
+				  			<c:if test="${ERROR != null }">
+					  			<ul>
+					  				<li style="color:white">Error: ${ ERROR } </li>
+					  			</ul>
+			  				</c:if>
+			  				<h4> ${MESSAGE}</h4>
+					  	</c:if>
+			  			
 			  			<br>
 			  			<input type="hidden" name="command" value="register">
 					  	<div class="form-group">
@@ -72,10 +91,20 @@
 					    	<label for="rg_cpassword">Confirm Password</label>
 					    	<input type="password" class="form-control" id="rg_cpassword" name="rg_cpassword" required>
 					  	</div>
-					  	<button class="btn btn-primary" type="submit" style="background:#FF9800;border:#FF9800">Register</button>
+					  	
+					  		<button class="btn btn-primary" type="submit" style="background:#FF9800;border:#FF9800">Register</button>
 					</form>
 			  	</div>
 			</div>
 		</div>
+		<c:if test="${ MODE == 2 }">
+		    <script>
+		    	function simulateClick() {
+		   			document.getElementById('nav-profile-tab').click();
+		    	}
+		    	simulateClick();
+		    			
+		    </script>
+		</c:if>
 	</body>
 </html>

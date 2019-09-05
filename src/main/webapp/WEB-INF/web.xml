@@ -19,4 +19,14 @@
     <servlet-name>AccountsServlet</servlet-name>
     <url-pattern>/AccountsServlet</url-pattern>
   </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>HomeControllerServlet</display-name>
+    <servlet-name>HomeControllerServlet</servlet-name>
+    <servlet-class>tech.codecozy.app.HomeControllerServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>HomeControllerServlet</servlet-name>
+    <url-pattern>/HomeControllerServlet</url-pattern>
+  </servlet-mapping>
 </web-app>
