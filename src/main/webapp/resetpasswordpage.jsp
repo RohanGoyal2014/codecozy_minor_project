@@ -19,7 +19,7 @@
 			  	<c:if test="${MESSAGE!=null }">
 			  		<h4>${ MESSAGE }</h4>
 			  		<br>
-			  		<button class="btn btn-warning" style="background:#FF9800;border:#FF9800" onclick="window.location.replace('accounts')">Go To Login Page</button>
+			  		<button class="btn btn-primary" style="background:#FF9800;border:#FF9800" onclick="window.location.replace('accounts')">Go To Login Page</button>
 				</c:if>
 			  	<ul>
 				  	<c:if test="${ERROR!=null }">

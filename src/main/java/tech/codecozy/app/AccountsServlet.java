@@ -109,8 +109,8 @@ public class AccountsServlet extends HttpServlet {
 		if(password == null || email == null) {
 			request.setAttribute("ERROR", "Input Fields can not be null");
 		} else {
-			email = email.strip();
-			password = password.strip();
+			email = email.trim();
+			password = password.trim();
 			if(password.isEmpty()) {
 				request.setAttribute("ERROR", "Password can not be empty");
 			} else if(email.isEmpty()) {
@@ -147,13 +147,13 @@ public class AccountsServlet extends HttpServlet {
 		if(email== null || password == null || confirmPassword == null || fname == null || lname == null || gender == null || username == null) {
 			request.setAttribute("ERROR", "Input fields can not be null");
 		} else {
-			email = email.strip();
-			password = password.strip();
-			confirmPassword = confirmPassword.strip();
-			fname = fname.strip();
-			lname = lname.strip();
-			gender = gender.strip();
-			username = username.strip();
+			email = email.trim();
+			password = password.trim();
+			confirmPassword = confirmPassword.trim();
+			fname = fname.trim();
+			lname = lname.trim();
+			gender = gender.trim();
+			username = username.trim();
 			if(fname.isEmpty()) {
 				request.setAttribute("ERROR","First Name can not be empty");
 			} else if(lname.isEmpty()) {
@@ -200,14 +200,14 @@ public class AccountsServlet extends HttpServlet {
 		if(email == null) {
 			//Skip
 		} else {
-			email = email.strip();
+			email = email.trim();
 			if(dbUtil.emailExists(email)) {
 				String subject = "Codecozy-Password Recovery";
 				String content = "Here is your reset password link: \n";
 				String link = getBaseUrl(request)+"/accounts?action=resetPassword&user="
 						+ new CryptoUtil().urlSafeEncrypt(CryptoUtil.KEY, email);
 				content += link;
-				MailUtil.send(email, subject, content);
+				MailUtil.send(email, subject, content); 
 			}
 		}
 		//Adding mode 3 for identifying forgot password tab on accounts.jsp
