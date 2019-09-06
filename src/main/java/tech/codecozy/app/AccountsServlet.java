@@ -37,31 +37,52 @@ public class AccountsServlet extends HttpServlet {
 
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		
+
 		HttpSession session = request.getSession(false);
 		try {
-			if(session == null) {	
-				RequestDispatcher rd = request.getRequestDispatcher("accounts.jsp");
-				rd.forward(request, response);
-			} else {
-				if(session.getAttribute("user") == null) {
-					String action = request.getParameter("action");
-					String user = request.getParameter("user");
-					if(action != null && action.equals("resetPassword") && user!=null && dbUtil.emailExists(new CryptoUtil().urlSafeDecrypt(CryptoUtil.KEY, user))) {
-						RequestDispatcher rd = request.getRequestDispatcher("resetpasswordpage.jsp");
-						request.setAttribute("USER", user);
-						rd.forward(request, response);
-					} else {
-						RequestDispatcher rd = request.getRequestDispatcher("accounts.jsp");
-						rd.forward(request, response);
-					}
+			String action = request.getParameter("action");
+			String user = request.getParameter("user");
+			if(action != null && user != null && action.equals("verifyUser")) {
+				// User Verification Management Routing Path
+				String email = new CryptoUtil().urlSafeDecrypt(CryptoUtil.KEY, user);
+				if(!dbUtil.emailExists(email) || dbUtil.isVerified(email) || dbUtil.isUserVerificationTimedOut(email)) {
+					response.sendRedirect("accounts");
 				} else {
-					response.sendRedirect("dashboard");
-					return;
+					dbUtil.markVerified(email);
+					RequestDispatcher rd = request.getRequestDispatcher("youareverified.jsp");
+					rd.forward(request, response);
+				}
+			} else {
+				if(session == null) {	
+					//Session doesn't exist
+					RequestDispatcher rd = request.getRequestDispatcher("accounts.jsp");
+					rd.forward(request, response);
+				} else {
+					if(session.getAttribute("user") == null) {
+						//User not logged in(even when session exists)
+						action = request.getParameter("action");
+						user = request.getParameter("user");
+						if(action != null && action.equals("resetPassword") && user!=null && dbUtil.emailExists(new CryptoUtil().urlSafeDecrypt(CryptoUtil.KEY, user))) {
+							//Reset Password Routing Management
+							RequestDispatcher rd = request.getRequestDispatcher("resetpasswordpage.jsp");
+							request.setAttribute("USER", user);
+							rd.forward(request, response);
+						} else {
+							//Invalid Reset Password Route
+							RequestDispatcher rd = request.getRequestDispatcher("accounts.jsp");
+							rd.forward(request, response);
+						}
+					} else {
+						//User logged in
+						response.sendRedirect("dashboard");
+						return;
+					}
 				}
 			}
 		} catch(Exception e) {
 			e.printStackTrace();
+			request.getSession().invalidate();
+			response.sendRedirect("accounts");
 		}
 		
 	}
@@ -193,7 +214,7 @@ public class AccountsServlet extends HttpServlet {
 		rd.forward(request, response);
 	}
 	
-	public void recoverAccount(HttpServletRequest request, HttpServletResponse response)throws Exception {
+	private void recoverAccount(HttpServletRequest request, HttpServletResponse response)throws Exception {
 		
 		String email = request.getParameter("fg_email");
 //		System.out.println(getBaseUrl(request));
@@ -204,7 +225,7 @@ public class AccountsServlet extends HttpServlet {
 			if(dbUtil.emailExists(email)) {
 				String subject = "Codecozy-Password Recovery";
 				String content = "Here is your reset password link: \n";
-				String link = getBaseUrl(request)+"/accounts?action=resetPassword&user="
+				String link = CloudConfig.getBaseUrl(request)+"/accounts?action=resetPassword&user="
 						+ new CryptoUtil().urlSafeEncrypt(CryptoUtil.KEY, email);
 				content += link;
 				MailUtil.send(email, subject, content); 
@@ -216,7 +237,7 @@ public class AccountsServlet extends HttpServlet {
 		rd.forward(request, response);
 	}
 	
-	public void resetPasswordFromLink(HttpServletRequest request, HttpServletResponse response) throws Exception {
+	private void resetPasswordFromLink(HttpServletRequest request, HttpServletResponse response) throws Exception {
 		String user = request.getParameter("user");
 		String password = request.getParameter("rst_password");
 		String confirmPassword = request.getParameter("rst_cpassword");
@@ -241,7 +262,7 @@ public class AccountsServlet extends HttpServlet {
 		rd.forward(request, response);
 	}
 	
-	public void getStoredUserNames(HttpServletRequest request, HttpServletResponse response) throws Exception {
+	private void getStoredUserNames(HttpServletRequest request, HttpServletResponse response) throws Exception {
 		ArrayList<String> usernames = dbUtil.getUsernames();
 		Gson gson = new Gson();
 //		System.out.println("received");
@@ -249,16 +270,8 @@ public class AccountsServlet extends HttpServlet {
 //		System.out.println(json);
 		response.getWriter().write(json);
 	}
-	
-	public static String getBaseUrl(HttpServletRequest request) {
-	    String scheme = request.getScheme() + "://";
-	    String serverName = request.getServerName();
-	    String serverPort = (request.getServerPort() == 80) ? "" : ":" + request.getServerPort();
-	    String contextPath = request.getContextPath();
-	    return scheme + serverName + serverPort + contextPath;
-	  }
 		
-	boolean isValidUserNameFormat(String username) {
+	private boolean isValidUserNameFormat(String username) {
 		for(int i=0;i<username.length();++i) {
 			if(username.charAt(i)=='_' || 
 					username.charAt(i)>='0' && username.charAt(i)<='9' || 

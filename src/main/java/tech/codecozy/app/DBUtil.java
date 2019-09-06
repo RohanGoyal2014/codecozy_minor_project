@@ -9,7 +9,7 @@ public class DBUtil {
 	
 	public DBUtil() {}
 	
-	public boolean checkLoginCredentials(String email, String password){
+	boolean checkLoginCredentials(String email, String password){
 		
 		Connection conn = null;
 		PreparedStatement stmt = null;
@@ -41,7 +41,7 @@ public class DBUtil {
 		
 	}
 	
-	public boolean emailExists(String email) {
+	boolean emailExists(String email) {
 		
 		Connection conn = null;
 		PreparedStatement stmt = null;
@@ -72,7 +72,7 @@ public class DBUtil {
 		
 	}
 	
-	public boolean usernameExists(String username) {
+	boolean usernameExists(String username) {
 		
 		Connection conn = null;
 		PreparedStatement stmt = null;
@@ -103,7 +103,7 @@ public class DBUtil {
 		
 	}
 
-	public void registerUser(User user) {
+	void registerUser(User user) {
 		
 		Connection conn = null;
 		PreparedStatement stmt = null;
@@ -135,7 +135,7 @@ public class DBUtil {
 		}
 	}
 	
-	public void updatePassword(String email, String password) {
+	void updatePassword(String email, String password) {
 		Connection conn = null;
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
@@ -160,7 +160,7 @@ public class DBUtil {
 		}
 	}
 	
-	public ArrayList<String> getUsernames() {
+	ArrayList<String> getUsernames() {
 		Connection conn = null;
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
@@ -187,5 +187,113 @@ public class DBUtil {
 		}
 		
 		return result;
+	}
+	
+	boolean isVerified(String email) {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		int verificationStatus = 0;
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			String sql = "select cp_isverified from cp_user where cp_email = ?";
+			
+			stmt = conn.prepareStatement(sql);
+			stmt.setString(1, email);
+			
+			rs = stmt.executeQuery();
+			
+			if(rs.next()) {
+				verificationStatus = rs.getInt("cp_isverified");
+			}
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
+		return (verificationStatus == 1)? true: false;
+	}
+	
+	void markVerificationMailSentTime(String email) {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		long timestamp = System.currentTimeMillis();
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			String sql = "update cp_user set cp_verificationMailSentTime=? where cp_email=?";
+			
+			stmt = conn.prepareStatement(sql);
+			stmt.setLong(1, timestamp);
+			stmt.setString(2, email);
+			
+			stmt.execute();
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
+
+	}
+	
+	boolean isUserVerificationTimedOut(String email) {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		long timestamp = System.currentTimeMillis();
+		boolean res = true;
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			String sql = "select cp_verificationMailSentTime from cp_user where cp_email=?";
+			
+			stmt = conn.prepareStatement(sql);
+			stmt.setString(1, email);
+			
+			rs = stmt.executeQuery();
+			if(rs.next()) {
+				long time = rs.getLong("cp_verificationMailSentTime");
+				long till = time + 15L*60L*1000L;
+				if(timestamp<=till) {
+					res = false;
+				}
+			}
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
+		return res;
+	}
+	
+	void markVerified(String email) {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			String sql = "update cp_user set cp_isverified=? where cp_email=?";
+			
+			stmt = conn.prepareStatement(sql);
+			stmt.setInt(1, 1);
+			stmt.setString(2, email);
+			
+			stmt.execute();
+			
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
 	}
 }

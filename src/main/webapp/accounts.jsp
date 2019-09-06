@@ -83,7 +83,7 @@
 					  	<div class="form-group">
 					    	<label for="rg_uname">Preferred Username</label>
 					    	<input type="text" class="form-control" id="rg_uname" onkeyup="checkUsername(this)" name="rg_uname" required>
-					  		<p id="usernames" style="display:none">...</p>
+					  		<p id="usernames" style="display:none" align="right">...</p>
 					  	</div>
 					  	<div class="form-group">
 					    	<label for="rg_password">Password</label>
@@ -143,7 +143,7 @@
 				//console.log(text);
 				var found = false;
 				if(text.length === 0) {
-					document.getElementById('usernames').style.display = "";
+					document.getElementById('usernames').style.display = "none";
 				}
 				$.post( "accounts", { command: "api_usernames"}, function(data) {
 					//console.log(data);

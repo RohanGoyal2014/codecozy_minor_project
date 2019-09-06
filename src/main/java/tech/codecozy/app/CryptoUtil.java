@@ -28,7 +28,7 @@ public class CryptoUtil
     };
     // Iteration count
     int iterationCount = 19;
-    HashMap<Character,Character> urlSafeMap, urlSafeReverseMap;
+    private HashMap<Character,Character> urlSafeMap, urlSafeReverseMap;
 
     public CryptoUtil() {
     	urlSafeMap = new HashMap<>();
