@@ -19,6 +19,7 @@
 				Follow the link provided in the email to verify your account.
 				Then come and click the "Refresh" button below to proceed to site. 
 				<br>
+			</h5>
 			<form method="post">
 				<input type="hidden" name="command" value="verifyAccount">
 				<button type="submit" class="btn btn-primary" style="background:#FF9800;border:#FF9800">Send Verification Mail</button>

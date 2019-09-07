@@ -1,6 +1,8 @@
 package tech.codecozy.app;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -45,6 +47,18 @@ public class HomeControllerServlet extends HttpServlet {
 					RequestDispatcher rd = request.getRequestDispatcher("verifyUser.jsp");
 					rd.forward(request, response);
 				} else {
+					ArrayList<Contest> contests = dbUtil.fetchContests();
+					
+					ArrayList<Contest> pastContests = new ArrayList<>();
+					ArrayList<Contest> ongoingContests = new ArrayList<>();
+					ArrayList<Contest> upcomingContests = new ArrayList<>();
+					
+					splitContestData(contests,pastContests,ongoingContests, upcomingContests);
+					
+					request.setAttribute("PAST_CONTEST_LIST", pastContests);
+					request.setAttribute("ONGOING_CONTEST_LIST", ongoingContests);
+					request.setAttribute("UPCOMING_CONTEST_LIST", upcomingContests);
+					request.setAttribute("IS_ADMIN",dbUtil.isAdmin(email));
 					RequestDispatcher rd= request.getRequestDispatcher("dashboard.jsp");
 					rd.forward(request, response);
 				}
@@ -95,6 +109,22 @@ public class HomeControllerServlet extends HttpServlet {
 				rd.forward(request, response);
 			}
 		}
+	}
+	
+	private void splitContestData(ArrayList<Contest> contests, ArrayList<Contest> pastContests,
+			ArrayList<Contest> ongoingContests, ArrayList<Contest> upcomingContests) {
+		long currentTimestamp = System.currentTimeMillis();
+		for(Contest i:contests) {
+			if(i.getStart()<=currentTimestamp && i.getEnd()>=currentTimestamp) {
+				ongoingContests.add(i);
+			} else if(i.getEnd()<currentTimestamp) {
+				pastContests.add(i);
+			} else {
+				upcomingContests.add(i);
+			}
+		}
+		//Since latest passed contests are to be viewed first
+		Collections.reverse(pastContests);
 	}
 
 }

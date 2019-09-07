@@ -3,7 +3,9 @@ package tech.codecozy.app;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class DBUtil {
 	
@@ -295,5 +297,67 @@ public class DBUtil {
 		} finally {
 			CloudConfig.close(conn, stmt, rs);
 		}
+	}
+	
+	ArrayList<Contest> fetchContests() {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		ArrayList<Contest> result = new ArrayList<>();
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			String sql = "select * from contest order by ct_start";
+			
+			stmt = conn.prepareStatement(sql);
+		
+			rs = stmt.executeQuery();
+			
+			while(rs.next()) {
+				long id = rs.getLong("ct_id");
+				String name = rs.getString("ct_name");
+				long start = rs.getLong("ct_start");
+				long end = rs.getLong("ct_end");
+				result.add(new Contest(id, name , start, end,
+						new Date(new Timestamp(start).getTime()), new Date(new Timestamp(end).getTime())));
+			}
+				
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
+		
+		return result;
+	}
+	
+	boolean isAdmin(String email) {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		boolean res =  false;
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			String sql = "select cp_userlevel from cp_user where cp_email=?";
+			
+			stmt = conn.prepareStatement(sql);
+			stmt.setString(1, email);
+		
+			rs = stmt.executeQuery();
+			
+			if(rs.next()) {
+				if(rs.getInt("cp_userlevel")!=0) res=true;
+			}
+				
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
+		
+		return res;
 	}
 }

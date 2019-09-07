@@ -110,6 +110,9 @@ public class AccountsServlet extends HttpServlet {
 				case "api_usernames":
 					getStoredUserNames(request, response);
 					break;
+				case "logout":
+					logoutUser(request, response);
+					break;
 				default:
 					doGet(request,response);
 				}
@@ -260,6 +263,11 @@ public class AccountsServlet extends HttpServlet {
 		}
 		RequestDispatcher rd = request.getRequestDispatcher("resetpasswordpage.jsp");
 		rd.forward(request, response);
+	}
+	
+	private void logoutUser(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		request.getSession().invalidate();
+		doGet(request, response);
 	}
 	
 	private void getStoredUserNames(HttpServletRequest request, HttpServletResponse response) throws Exception {

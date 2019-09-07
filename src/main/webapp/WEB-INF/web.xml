@@ -29,4 +29,14 @@
     <servlet-name>HomeControllerServlet</servlet-name>
     <url-pattern>/HomeControllerServlet</url-pattern>
   </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>SearchControllerServlet</display-name>
+    <servlet-name>SearchControllerServlet</servlet-name>
+    <servlet-class>tech.codecozy.app.SearchControllerServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>SearchControllerServlet</servlet-name>
+    <url-pattern>/SearchControllerServlet</url-pattern>
+  </servlet-mapping>
 </web-app>
