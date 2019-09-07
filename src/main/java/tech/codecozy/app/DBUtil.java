@@ -360,4 +360,33 @@ public class DBUtil {
 		
 		return res;
 	}
+	
+	User getUserByUsername(String username) {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		User user = null;
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			String sql = "select * from cp_user where cp_username=?";
+			
+			stmt = conn.prepareStatement(sql);
+			stmt.setString(1, username);
+		
+			rs = stmt.executeQuery();
+			
+			if(rs.next()) {
+				user = new User(rs.getString("cp_fname"),rs.getString("cp_lname"),
+						rs.getString("cp_email"),username,null,rs.getString("cp_gender").charAt(0));
+			}
+				
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
+		return user;
+	}
 }
