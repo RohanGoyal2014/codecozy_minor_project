@@ -81,6 +81,7 @@ public class HomeControllerServlet extends HttpServlet {
 				} 
 			} catch(Exception e) {
 				e.printStackTrace();
+				doGet(request, response);
 			}
 		}
 	}

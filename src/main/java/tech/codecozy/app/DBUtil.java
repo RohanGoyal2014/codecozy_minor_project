@@ -320,7 +320,8 @@ public class DBUtil {
 				long start = rs.getLong("ct_start");
 				long end = rs.getLong("ct_end");
 				result.add(new Contest(id, name , start, end,
-						new Date(new Timestamp(start).getTime()), new Date(new Timestamp(end).getTime())));
+						new Date(new Timestamp(start).getTime()), new Date(new Timestamp(end).getTime()),
+						rs.getString("ct_editorial_link")));
 			}
 				
 		} catch(Exception e) {

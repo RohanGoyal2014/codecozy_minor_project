@@ -14,7 +14,7 @@
 	<div class="container-fluid">
 	
 		<c:if test="${IS_ADMIN == true }">
-			<button class="btn btn-primary" style="background:#03A9F4;border:#03A9F4" onclick="window.location.href=admin">Admin Panel</button>
+			<button class="btn btn-primary" style="background:#03A9F4;border:#03A9F4" onclick="window.location.href='admin'">Admin Panel</button>
 		</c:if>
 	
 		<br><br>

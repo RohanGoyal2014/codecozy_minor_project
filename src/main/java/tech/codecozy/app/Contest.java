@@ -10,16 +10,12 @@ public class Contest {
 	private long end;
 	private Date startDateTime;
 	private Date endDateTime;
+	private String editorialLink;
 	
-	public Contest(long id, String name, long start, long end) {
-		super();
-		this.id = id;
-		this.name = name;
-		this.start = start;
-		this.end = end;
-	}
-
-	public Contest(long id, String name, long start, long end, Date startDateTime, Date endDateTime) {
+	
+	
+	public Contest(long id, String name, long start, long end, Date startDateTime, Date endDateTime,
+			String editorialLink) {
 		super();
 		this.id = id;
 		this.name = name;
@@ -27,6 +23,18 @@ public class Contest {
 		this.end = end;
 		this.startDateTime = startDateTime;
 		this.endDateTime = endDateTime;
+		this.editorialLink = editorialLink;
+	}
+	
+
+	public String getEditorialLink() {
+		return editorialLink;
+	}
+
+
+
+	public void setEditorialLink(String editorialLink) {
+		this.editorialLink = editorialLink;
 	}
 
 
