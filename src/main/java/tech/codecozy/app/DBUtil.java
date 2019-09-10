@@ -3,6 +3,7 @@ package tech.codecozy.app;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
@@ -389,5 +390,99 @@ public class DBUtil {
 			CloudConfig.close(conn, stmt, rs);
 		}
 		return user;
+	}
+	
+	long createContestAndGetID(Contest contest) {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			String sql = "insert into contest(ct_name,ct_start,ct_end,ct_editorial_link) values(?,?,?,?)";
+			
+			stmt = conn.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS);
+			stmt.setString(1, contest.getName());
+			stmt.setLong(2, contest.getStart());
+			stmt.setLong(3, contest.getEnd());
+			stmt.setString(4, contest.getEditorialLink());
+		
+			stmt.executeUpdate();
+			
+			rs = stmt.getGeneratedKeys();
+			
+			if(rs!=null && rs.next()) {
+				int id = rs.getInt(1);
+				return id;
+			}
+			
+				
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
+		
+		return -1;
+	}
+	
+	long addProblemToContest(Problem problem) {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			String sql = "insert into problem(pb_name,pb_description,ct_id) values(?,?,?)";
+			
+			stmt = conn.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS);
+			stmt.setString(1, problem.getName());
+			stmt.setString(2, problem.getLink());
+			stmt.setLong(3, problem.getContestId());
+			
+			stmt.executeUpdate();
+			
+			rs = stmt.getGeneratedKeys();
+			
+			if(rs!=null && rs.next()) {
+				return rs.getInt(1);
+			}
+			
+				
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
+		
+		return -1;
+	}
+	
+	void addTestCase(TestCase tc) {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			String sql = "insert into test_case(pb_id,tc_input,tc_output) values(?,?,?)";
+			
+			stmt = conn.prepareStatement(sql);
+			stmt.setLong(1, tc.getProblemID());
+			stmt.setString(2, tc.getInputPath());
+			stmt.setString(3, tc.getOutputPath());
+			
+			stmt.execute();
+			
+			
+				
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
 	}
 }

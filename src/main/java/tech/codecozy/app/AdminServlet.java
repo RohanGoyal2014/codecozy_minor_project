@@ -1,8 +1,12 @@
 package tech.codecozy.app;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+
 import java.io.InputStream;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -36,6 +40,7 @@ public class AdminServlet extends HttpServlet {
 	}
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		
 		HttpSession session = request.getSession(false);
 		if(session == null || session.getAttribute("user") == null) {
 			response.sendRedirect("accounts");
@@ -86,70 +91,147 @@ public class AdminServlet extends HttpServlet {
 				problem1Name == null || problem1Link == null || problem2Name == null || problem2Link == null) {
 			request.setAttribute("ERROR", "Input fields can not be null");
 		} else {
+			contestStart = contestStart.replace("T", " ");
+			contestStart+=":00";
+			contestEnd = contestEnd.replace("T", " ");
+			contestEnd+=":00";
+			SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			long startTimestamp = format.parse(contestStart).getTime();
+			long endTimestamp = format.parse(contestEnd).getTime();
+			long minLimit = 15L*60L;
+			long curr = System.currentTimeMillis();
+			if(startTimestamp<curr) {
+				request.setAttribute("ERROR", "Invalid Start Date");
+			} else if(endTimestamp-startTimestamp<minLimit) {
+				request.setAttribute("ERROR","Minimum contest time must be 15mins");
+			} else {
 			
-			ArrayList<UploadedIoFile> problem1Inputs = new ArrayList<>();
-			ArrayList<UploadedIoFile> problem1Outputs = new ArrayList<>();
-			ArrayList<UploadedIoFile> problem2Inputs = new ArrayList<>();
-			ArrayList<UploadedIoFile> problem2Outputs = new ArrayList<>();
-			
-			List<Part> fileParts = request.getParts().stream().filter(part -> "input1".equals(part.getName())).collect(Collectors.toList());
-		    for (Part filePart : fileParts) {
-		        String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString(); 
-		        InputStream fileContent = filePart.getInputStream();
-		        problem1Inputs.add(new UploadedIoFile(fileName,fileContent));
-		    }
-		    
-		    HashSet<String> inputFileFormats = getAllowedFileFormat("input");
-		    HashSet<String> outputFileFormats = getAllowedFileFormat("output");
-		    
-		    fileParts.clear();
-		    fileParts = request.getParts().stream().filter(part -> "output1".equals(part.getName())).collect(Collectors.toList());
-		    for (Part filePart : fileParts) {
-		        String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString(); 
-		        InputStream fileContent = filePart.getInputStream();
-		        problem1Outputs.add(new UploadedIoFile(fileName,fileContent));
-		    }
-		    
-		    fileParts.clear();
-		    fileParts = request.getParts().stream().filter(part -> "input2".equals(part.getName())).collect(Collectors.toList());
-		    for (Part filePart : fileParts) {
-		        String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString(); 
-		        InputStream fileContent = filePart.getInputStream();
-		        problem2Inputs.add(new UploadedIoFile(fileName,fileContent));
-		    }
-		    
-		    fileParts.clear();
-		    fileParts = request.getParts().stream().filter(part -> "output2".equals(part.getName())).collect(Collectors.toList());
-		    for (Part filePart : fileParts) {
-		        String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString(); 
-		        InputStream fileContent = filePart.getInputStream();
-		        problem2Outputs.add(new UploadedIoFile(fileName,fileContent));
-		    }
-		    
-		    if(problem1Inputs.size()<5) {
-		    	request.setAttribute("ERROR", "Incorrect number of inputs for Problem 1");
-		    } else if(problem1Outputs.size()<5) {
-		    	request.setAttribute("ERROR", "Incorrect number of outputs for Problem 1");
-		    } else if(problem2Inputs.size()<5) {
-		    	request.setAttribute("ERROR", "Incorrect number of inputs for Problem 2");
-		    } else if(problem2Outputs.size()<5) {
-		    	request.setAttribute("ERROR", "Incorrect number of outputs for Problem 2");
-		    } else if(isValidFormat(problem1Inputs,inputFileFormats)){
-		    	request.setAttribute("ERROR", "Incorrect format files provided in inputs for problem 1 inputs");
-		    } else if(isValidFormat(problem1Outputs,outputFileFormats)){
-		    	request.setAttribute("ERROR", "Incorrect format files provided in inputs for problem 1 outputs");
-		    } else if(isValidFormat(problem1Outputs,inputFileFormats)){
-		    	request.setAttribute("ERROR", "Incorrect format files provided in inputs for problem 2 inputs");
-		    } else if(isValidFormat(problem1Outputs,outputFileFormats)){
-		    	request.setAttribute("ERROR", "Incorrect format files provided in inputs for problem 2 outputs");
-		    } else {
-		    	//Validation Success
-		    	
-		    }
+				
+				ArrayList<UploadedIoFile> problem1Inputs = new ArrayList<>();
+				ArrayList<UploadedIoFile> problem1Outputs = new ArrayList<>();
+				ArrayList<UploadedIoFile> problem2Inputs = new ArrayList<>();
+				ArrayList<UploadedIoFile> problem2Outputs = new ArrayList<>();
+				
+				List<Part> fileParts = request.getParts().stream().filter(part -> "input1".equals(part.getName())).collect(Collectors.toList());
+			    for (Part filePart : fileParts) {
+			        String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString(); 
+			        InputStream fileContent = filePart.getInputStream();
+			        problem1Inputs.add(new UploadedIoFile(fileName,fileContent));
+			    }
+			    
+			    HashSet<String> inputFileFormats = getAllowedFileFormat("input");
+			    HashSet<String> outputFileFormats = getAllowedFileFormat("output");
+			    
+			    fileParts.clear();
+			    fileParts = request.getParts().stream().filter(part -> "output1".equals(part.getName())).collect(Collectors.toList());
+			    for (Part filePart : fileParts) {
+			        String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString(); 
+			        InputStream fileContent = filePart.getInputStream();
+			        problem1Outputs.add(new UploadedIoFile(fileName,fileContent));
+			    }
+			    
+			    fileParts.clear();
+			    fileParts = request.getParts().stream().filter(part -> "input2".equals(part.getName())).collect(Collectors.toList());
+			    for (Part filePart : fileParts) {
+			        String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString(); 
+			        InputStream fileContent = filePart.getInputStream();
+			        problem2Inputs.add(new UploadedIoFile(fileName,fileContent));
+			    }
+			    
+			    fileParts.clear();
+			    fileParts = request.getParts().stream().filter(part -> "output2".equals(part.getName())).collect(Collectors.toList());
+			    for (Part filePart : fileParts) {
+			        String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString(); 
+			        InputStream fileContent = filePart.getInputStream();
+			        problem2Outputs.add(new UploadedIoFile(fileName,fileContent));
+			    }
+			    
+			    if(problem1Inputs.size()<5) {
+			    	request.setAttribute("ERROR", "Incorrect number of inputs for Problem 1");
+			    } else if(problem1Outputs.size()<5) {
+			    	request.setAttribute("ERROR", "Incorrect number of outputs for Problem 1");
+			    } else if(problem2Inputs.size()<5) {
+			    	request.setAttribute("ERROR", "Incorrect number of inputs for Problem 2");
+			    } else if(problem2Outputs.size()<5) {
+			    	request.setAttribute("ERROR", "Incorrect number of outputs for Problem 2");
+			    } else if(!isValidFormat(problem1Inputs,inputFileFormats)){
+			    	request.setAttribute("ERROR", "Incorrect format files provided for problem 1 inputs");
+			    } else if(!isValidFormat(problem1Outputs,outputFileFormats)){
+			    	request.setAttribute("ERROR", "Incorrect format files provided for problem 1 outputs");
+			    } else if(!isValidFormat(problem2Inputs,inputFileFormats)){
+			    	request.setAttribute("ERROR", "Incorrect format files provided for problem 2 inputs");
+			    } else if(!isValidFormat(problem1Outputs,outputFileFormats)){
+			    	request.setAttribute("ERROR", "Incorrect format files provided for problem 2 outputs");
+			    } else {
+			    	//Validation Success
+			    	
+			    	long id = dbUtil.createContestAndGetID(new Contest(-1,contestName, startTimestamp, endTimestamp, null, null, editorialLink));
+			    	
+			    	if(id == -1) {
+			    		request.setAttribute("ERROR", "Something went wrong");
+			    	} else {
+ 			    	
+			    		long pb1ID = dbUtil.addProblemToContest(new Problem(problem1Name,problem1Link,id));
+				    	long pb2ID = dbUtil.addProblemToContest(new Problem(problem2Name,problem2Link,id));
+				    	
+				    	String UPLOAD_DIR = "uploadedFiles"+File.separator+"contests"+ File.separator +String.valueOf(id);
+						String applicationPath = getServletContext().getRealPath("");
+				        String uploadPath1 = applicationPath + UPLOAD_DIR+"-1";
+				        String uploadPath2 = applicationPath + UPLOAD_DIR+"-2";
+		//				System.out.println("Amm:"+uploadPath);
+						File fileUploadDirectory1 = new File(uploadPath1);
+						File fileUploadDirectory2 = new File(uploadPath2);
+						if(!fileUploadDirectory1.exists()) {
+							fileUploadDirectory1.mkdirs();
+						}
+						if(!fileUploadDirectory2.exists()) {
+							fileUploadDirectory2.mkdirs();
+						}
+						TestCase[] tc1 = new TestCase[5];
+						TestCase[] tc2 = new TestCase[5];
+						int tcNumber = 0;
+				    	for(UploadedIoFile f: problem1Inputs) {
+				    		String path=uploadPath1+File.separator+f.getName();
+				    		tc1[tcNumber++] = new TestCase(pb1ID, path, null);
+				    		copyInputStreamToFile(f.getContent(),new File(path));
+				    	}
+				    	tcNumber = 0;
+				    	for(UploadedIoFile f: problem1Outputs) {
+				    		String path = uploadPath1+File.separator+f.getName();
+				    		tc1[tcNumber++].setOutputPath(path);
+				    		copyInputStreamToFile(f.getContent(),new File(path));
+				    	}
+				    	tcNumber = 0;
+				    	for(UploadedIoFile f: problem2Inputs) {
+				    		String path = uploadPath2+File.separator+f.getName();
+				    		tc2[tcNumber++] = new TestCase(pb2ID, path, null); 
+				    		copyInputStreamToFile(f.getContent(),new File(path));
+				    	}
+				    	tcNumber = 0;
+				    	for(UploadedIoFile f: problem2Outputs) {
+				    		String path = uploadPath2+File.separator+f.getName();
+				    		tc2[tcNumber++].setOutputPath(path);
+				    		copyInputStreamToFile(f.getContent(),new File(path));
+				    	}
+				    	tcNumber = 0;
+				    	while(tcNumber < 5) {
+				    		dbUtil.addTestCase(tc1[tcNumber]);
+				    		dbUtil.addTestCase(tc2[tcNumber]);
+				    		++tcNumber;
+				    	}
+				    	
+				    	File file = new File(uploadPath2+File.separator+"ouu.txt");
+				    	System.out.println(file.exists());
+				    	
+				    	request.setAttribute("MESSAGE", "Contest Created Successfully");
+			    	}
+			    	
+				}
+			}
 		}
 		//Mode 1 for first tab
 		request.setAttribute("MODE", 1);
-		RequestDispatcher rd = request.getRequestDispatcher("admin");
+		RequestDispatcher rd = request.getRequestDispatcher("admin.jsp");
 		rd.forward(request, response);
 	}
 	
@@ -170,5 +252,22 @@ public class AdminServlet extends HttpServlet {
 		}
 		return format;
 	}
+	
+	private static void copyInputStreamToFile(InputStream inputStream, File file) 
+			throws IOException {
+
+	        try (FileOutputStream outputStream = new FileOutputStream(file)) {
+
+	            int read;
+	            byte[] bytes = new byte[1024];
+
+	            while ((read = inputStream.read(bytes)) != -1) {
+	                outputStream.write(bytes, 0, read);
+	            }
+
+	        }
+
+	    }
+
 
 }

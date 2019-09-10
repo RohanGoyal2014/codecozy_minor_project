@@ -114,13 +114,18 @@ public class HomeControllerServlet extends HttpServlet {
 	
 	private void splitContestData(ArrayList<Contest> contests, ArrayList<Contest> pastContests,
 			ArrayList<Contest> ongoingContests, ArrayList<Contest> upcomingContests) {
+		pastContests.clear();
+		ongoingContests.clear();
+		upcomingContests.clear();
 		long currentTimestamp = System.currentTimeMillis();
 		for(Contest i:contests) {
 			if(i.getStart()<=currentTimestamp && i.getEnd()>=currentTimestamp) {
+//				System.out.println("Hey"+currentTimestamp);
 				ongoingContests.add(i);
 			} else if(i.getEnd()<currentTimestamp) {
 				pastContests.add(i);
 			} else {
+//				System.out.println("Amm"+currentTimestamp);
 				upcomingContests.add(i);
 			}
 		}

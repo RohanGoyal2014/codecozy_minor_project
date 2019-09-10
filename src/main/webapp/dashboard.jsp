@@ -60,7 +60,7 @@
 					</c:when>
 					<c:otherwise>
 						<ol>
-							<c:forEach var="pc" items="${ ONGOING_CONTEST_LIST }">
+							<c:forEach var="pc" items="${ UPCOMING_CONTEST_LIST }">
 								<li>
 									<h5>${ pc.name }</h5>
 									<b>Start Time:</b> ${ pc.startDateTime }

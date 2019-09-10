@@ -38,9 +38,11 @@
 		<div class="tab-content">
 		  	<div class="tab-pane container-fluid active" id="home">
 		  	<c:if test="${MODE ==1 }">
-				<ul>
-				<li style="color:red">${ ERROR }</li>
-				</ul>
+		  		<c:if test="${ERROR!=null }">
+					<ul>
+					<li style="color:red">${ ERROR }</li>
+					</ul>
+				</c:if>
 		  	</c:if>
 		  <br>
 		  	<form method="post"enctype="multipart/form-data">
