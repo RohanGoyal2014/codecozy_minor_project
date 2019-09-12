@@ -1,5 +1,6 @@
 package tech.codecozy.app;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -478,6 +479,152 @@ public class DBUtil {
 			stmt.execute();
 			
 			
+				
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
+	}
+	
+	boolean isSuperAdmin(String email) {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			String sql = "select cp_userlevel from cp_user where cp_email = ?";
+			
+			stmt = conn.prepareStatement(sql);
+			stmt.setString(1, email);
+			
+			rs = stmt.executeQuery();
+			
+			if(rs.next()) {
+				if(rs.getInt("cp_userlevel")==2) {
+					return true;
+				}
+			}
+			
+				
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
+		return false;
+	}
+	
+	void removeContest(long id) {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			String sql = "select pb_id from problem where ct_id=?";
+			
+			stmt = conn.prepareStatement(sql);
+			stmt.setLong(1,id);
+			
+			rs = stmt.executeQuery();
+			
+			while(rs.next()) {
+				long pbID = rs.getLong("pb_id");
+				removeProblem(pbID);
+			}
+			sql = "delete from contest where ct_id=?";
+			PreparedStatement stmt2 = conn.prepareStatement(sql);
+			stmt2.setLong(1, id);
+			stmt2.execute();
+			CloudConfig.close(null, stmt2, null);
+			
+				
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
+	}
+	
+	private void removeProblem(long id) {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			String sql = "select tc_id from test_case where pb_id=?";
+			
+			stmt = conn.prepareStatement(sql);
+			stmt.setLong(1,id);
+			
+			rs = stmt.executeQuery();
+			
+			while(rs.next()) {
+				long tcID = rs.getLong("tc_id");
+				removeTestCase(tcID);
+			}
+			sql = "delete from problem where pb_id=?";
+			PreparedStatement stmt2 = conn.prepareStatement(sql);
+			stmt2.setLong(1, id);
+			stmt2.execute();
+			CloudConfig.close(null, stmt2, null);
+				
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
+	}
+	
+	private void removeTestCase(long id) {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			String sql = "select * from test_case where tc_id=?";
+			
+			stmt = conn.prepareStatement(sql);
+			stmt.setLong(1,id);
+			
+			rs = stmt.executeQuery();
+			
+			if(rs.next()) {
+				String inputPath = rs.getString("tc_input");
+				String outputPath = rs.getString("tc_output");
+				File inputFile = new File(inputPath);
+				File outputFile = new File(outputPath);
+				inputFile.delete();
+				outputFile.delete();
+				
+				int ipos = inputPath.indexOf("/input");
+				int opos = outputPath.indexOf("/output");
+				inputPath = inputPath.substring(0, ipos);
+				outputPath = outputPath.substring(0, opos);
+				inputFile = new File(inputPath);
+				outputFile = new File(outputPath);
+//				System.out.println(inputPath);
+//				System.out.println(outputPath);
+				if(inputFile.exists()) {
+					inputFile.delete();
+				}
+				if(outputFile.exists()) {
+					outputFile.delete();
+				}
+				sql = "delete from test_case where tc_id=?";
+				PreparedStatement stmt2 = conn.prepareStatement(sql);
+				stmt2.setLong(1, id);
+				stmt2.execute();
+				CloudConfig.close(null, stmt2, null);
+			}
 				
 		} catch(Exception e) {
 			e.printStackTrace();

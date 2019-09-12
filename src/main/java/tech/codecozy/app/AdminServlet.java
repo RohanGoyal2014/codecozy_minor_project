@@ -50,6 +50,8 @@ public class AdminServlet extends HttpServlet {
 			if(!dbUtil.emailExists(email) || !dbUtil.isAdmin(email)) {
 				response.sendError(HttpServletResponse.SC_NOT_FOUND);
 			} else {
+				request.setAttribute("IS_SUPERADMIN", dbUtil.isSuperAdmin(email));
+				request.setAttribute("CONTESTS", filterUpcomingContests(dbUtil.fetchContests()));
 				RequestDispatcher rd = request.getRequestDispatcher("admin.jsp");
 				rd.forward(request, response);
 			}
@@ -57,6 +59,14 @@ public class AdminServlet extends HttpServlet {
 	}
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		
+		HttpSession session = request.getSession(false);
+		
+		if(session == null || session.getAttribute("user")== null) {
+			doGet(request, response);
+			return;
+		}
+		
 		String command = request.getParameter("command");
 		
 		if(command == null) {
@@ -66,6 +76,9 @@ public class AdminServlet extends HttpServlet {
 				switch(command) {
 				case "add_contest":
 					addContest(request, response);
+					break;
+				case "remove_contest":
+					deleteContest(request, response);
 					break;
 				default:
 					doGet(request, response);
@@ -112,15 +125,15 @@ public class AdminServlet extends HttpServlet {
 				ArrayList<UploadedIoFile> problem2Inputs = new ArrayList<>();
 				ArrayList<UploadedIoFile> problem2Outputs = new ArrayList<>();
 				
+				HashSet<String> inputFileFormats = getAllowedFileFormat("input");
+			    HashSet<String> outputFileFormats = getAllowedFileFormat("output");
+				
 				List<Part> fileParts = request.getParts().stream().filter(part -> "input1".equals(part.getName())).collect(Collectors.toList());
 			    for (Part filePart : fileParts) {
 			        String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString(); 
 			        InputStream fileContent = filePart.getInputStream();
 			        problem1Inputs.add(new UploadedIoFile(fileName,fileContent));
 			    }
-			    
-			    HashSet<String> inputFileFormats = getAllowedFileFormat("input");
-			    HashSet<String> outputFileFormats = getAllowedFileFormat("output");
 			    
 			    fileParts.clear();
 			    fileParts = request.getParts().stream().filter(part -> "output1".equals(part.getName())).collect(Collectors.toList());
@@ -194,6 +207,9 @@ public class AdminServlet extends HttpServlet {
 				    		String path=uploadPath1+File.separator+f.getName();
 				    		tc1[tcNumber++] = new TestCase(pb1ID, path, null);
 				    		copyInputStreamToFile(f.getContent(),new File(path));
+				    		if(new File(path).exists()) {
+//				    			System.out.println("Yes");
+				    		}
 				    	}
 				    	tcNumber = 0;
 				    	for(UploadedIoFile f: problem1Outputs) {
@@ -219,11 +235,8 @@ public class AdminServlet extends HttpServlet {
 				    		dbUtil.addTestCase(tc2[tcNumber]);
 				    		++tcNumber;
 				    	}
-				    	
-				    	File file = new File(uploadPath2+File.separator+"ouu.txt");
-				    	System.out.println(file.exists());
-				    	
-				    	request.setAttribute("MESSAGE", "Contest Created Successfully");
+				    	response.sendRedirect("dashboard");
+				    	return;
 			    	}
 			    	
 				}
@@ -231,9 +244,43 @@ public class AdminServlet extends HttpServlet {
 		}
 		//Mode 1 for first tab
 		request.setAttribute("MODE", 1);
+		
+		User user = (User)request.getSession().getAttribute("user");
+		request.setAttribute("IS_SUPERADMIN", dbUtil.isSuperAdmin(user.getEmail()));
+		
 		RequestDispatcher rd = request.getRequestDispatcher("admin.jsp");
 		rd.forward(request, response);
 	}
+	
+	private void deleteContest(HttpServletRequest request, HttpServletResponse response) throws Exception{
+		String ct_id_str = request.getParameter("ct");
+		if(ct_id_str == null) {
+			request.setAttribute("ERROR", "Invalid Request");
+		} else {
+			long ct_id=-1;
+			try {
+				ct_id = Long.parseLong(ct_id_str);
+			} catch(Exception e) {
+				e.printStackTrace();
+				request.setAttribute("ct_id", "Invalid Request");
+			}
+			if(ct_id != -1) {
+				dbUtil.removeContest(ct_id);
+				response.sendRedirect("dashboard");
+				return;
+			}
+		}
+		
+		//Mode 2 for second tab
+		request.setAttribute("MODE", 2);
+		
+		User user = (User)request.getSession().getAttribute("user");
+		request.setAttribute("IS_SUPERADMIN", dbUtil.isSuperAdmin(user.getEmail()));
+		
+		RequestDispatcher rd = request.getRequestDispatcher("admin.jsp");
+		rd.forward(request, response);
+	}
+	
 	
 	private boolean isValidFormat(ArrayList<UploadedIoFile> files, HashSet<String> hs) {
 		for(int i=0;i<files.size();++i) {
@@ -255,19 +302,33 @@ public class AdminServlet extends HttpServlet {
 	
 	private static void copyInputStreamToFile(InputStream inputStream, File file) 
 			throws IOException {
+		try (FileOutputStream outputStream = new FileOutputStream(file)) {
 
-	        try (FileOutputStream outputStream = new FileOutputStream(file)) {
+		    int read;
+		    byte[] bytes = new byte[1024];
+	
+		    while ((read = inputStream.read(bytes)) != -1) {
+		    	outputStream.write(bytes, 0, read);
+		    }
 
-	            int read;
-	            byte[] bytes = new byte[1024];
+		}
 
-	            while ((read = inputStream.read(bytes)) != -1) {
-	                outputStream.write(bytes, 0, read);
-	            }
-
-	        }
-
-	    }
+	}
+	
+	private ArrayList<Contest> filterUpcomingContests(ArrayList<Contest> contests) {
+		ArrayList<Contest> filtered = new ArrayList<>();
+		
+		long currTimestamp = System.currentTimeMillis();
+		
+		for(Contest c: contests) {
+			if(c.getStart()>currTimestamp) {
+				filtered.add(c);
+			}
+		}
+		
+		return filtered;
+	}
+	
 
 
 }
