@@ -632,4 +632,84 @@ public class DBUtil {
 			CloudConfig.close(conn, stmt, rs);
 		}
 	}
+	
+	ArrayList<User> getAdmins() {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		ArrayList<User> admins = new ArrayList<>();
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			String sql = "select * from cp_user where cp_userlevel=1";
+			
+			stmt = conn.prepareStatement(sql);
+			
+			rs = stmt.executeQuery();
+			
+			while(rs.next()) {
+				admins.add(new User(
+						rs.getString("cp_fname"),
+						rs.getString("cp_lname"),
+						rs.getString("cp_email"),
+						rs.getString("cp_username"),
+						null,'\0'
+						));
+			}
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
+		
+		return admins;
+	}
+	
+	void removeAdmin(String username) {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			String sql = "update cp_user set cp_userlevel=0 where cp_username=?";
+			
+			stmt = conn.prepareStatement(sql);
+			stmt.setString(1, username);
+			
+			stmt.execute();
+			
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
+	}
+	
+	void addAdmin(String username) {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			String sql = "update cp_user set cp_userlevel=1 where cp_username=?";
+			
+			stmt = conn.prepareStatement(sql);
+			stmt.setString(1, username);
+			
+			stmt.execute();
+			
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
+	}
 }

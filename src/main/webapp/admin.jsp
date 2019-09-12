@@ -163,7 +163,50 @@
 		  <c:if test="${ IS_SUPERADMIN }">
 		  	<div class="tab-pane container-fluid fade" id="menu1">
 		  		<br>
-		  	
+		  
+		  		<c:if test="${MODE ==3 }">
+		  			<c:if test="${ERROR!=null }">
+						<ul>
+							<li style="color:red">${ ERROR }</li>
+						</ul>
+					</c:if>
+					<h4>${ MESSAGE }</h4>
+					<br>
+		  		</c:if>
+		  		<br>
+		  		<form method="post" name="add_admin_form">
+					<input type="hidden" name="command" value="add_admin">
+					<p id="suggestions"></p>
+					<br>
+					<input type="text" class="form-control" name="username" id="username" placeholder = "Enter Username" onkeyup="showSuggestions(this)" required>
+					<br>
+					<button class="btn btn-primary">Make Admin</button>
+				</form>
+				<br>
+				<hr>
+				<br>
+		  		
+		  		<c:choose>
+					<c:when test="${ ADMINS.size() == 0 }">
+						No Admins as of now...
+					</c:when>
+					<c:otherwise>
+						<form method="post"name="rem_admin_form">
+							<input type="hidden" name="command" value="remove_admin">
+							<input type="hidden" id="admin_to_delete" name="admin" value="">
+						</form>
+						<ol>
+							<c:forEach var="pc" items="${ ADMINS }">
+								<li>
+									<h5>${ pc.fname } ${ pc.lname }</h5>
+									<b>Username:</b> ${ pc.username } <br>
+									<b>Email:</b> ${ pc.email }									
+								</li>	
+								<a href="#" style="color:#03A9F4" onclick="removeAdmin('${ pc.username }')">Remove</a>
+							</c:forEach>
+						</ol>
+					</c:otherwise>
+				</c:choose>
 		  	
 		  	</div>
 		  </c:if>
@@ -205,6 +248,38 @@
 			//console.log(document.del_form.ct.value);
 			document.del_form.submit();
 		}
+		
+		function removeAdmin(username) {
+			document.rem_admin_form.admin.value = username;
+			document.rem_admin_form.submit();
+		}
+		
+		function showSuggestions(obj) {
+			document.getElementById('suggestions').innerHTML = "Loading...";
+			var text = obj.value;
+			//console.log(text.length);
+			if(text.length === 0) {
+				document.getElementById('suggestions').innerHTML = "";
+				return;
+			}
+			$.post( "accounts", { command: "api_usernames"}, function(data) {
+				console.log(data);
+				var matches = [];
+				data = JSON.parse(data);
+				for(var i=0;i<data.length;++i) {
+					if(data[i].indexOf(text)==0) {
+						matches.push(data[i]);
+					}
+				}
+				if(matches.length === 0) {
+					//console.log(text.length);
+					document.getElementById('suggestions').innerHTML = "No such users...";
+				} else {
+					document.getElementById('suggestions').innerHTML="<b>Suggestions:</b>"+matches;
+				}
+			});
+		}
+		
 	</script>
 	<c:choose>
 			<c:when test="${ MODE == 2 }">

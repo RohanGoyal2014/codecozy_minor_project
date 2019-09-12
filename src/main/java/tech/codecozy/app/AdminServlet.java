@@ -51,6 +51,7 @@ public class AdminServlet extends HttpServlet {
 				response.sendError(HttpServletResponse.SC_NOT_FOUND);
 			} else {
 				request.setAttribute("IS_SUPERADMIN", dbUtil.isSuperAdmin(email));
+				request.setAttribute("ADMINS", dbUtil.getAdmins());
 				request.setAttribute("CONTESTS", filterUpcomingContests(dbUtil.fetchContests()));
 				RequestDispatcher rd = request.getRequestDispatcher("admin.jsp");
 				rd.forward(request, response);
@@ -79,6 +80,12 @@ public class AdminServlet extends HttpServlet {
 					break;
 				case "remove_contest":
 					deleteContest(request, response);
+					break;
+				case "remove_admin":
+					removeAdmin(request, response);
+					break;
+				case "add_admin":
+					addAdmin(request, response);
 					break;
 				default:
 					doGet(request, response);
@@ -235,8 +242,7 @@ public class AdminServlet extends HttpServlet {
 				    		dbUtil.addTestCase(tc2[tcNumber]);
 				    		++tcNumber;
 				    	}
-				    	response.sendRedirect("dashboard");
-				    	return;
+				    	request.setAttribute("MESSAGE", "Contest addition Successful");
 			    	}
 			    	
 				}
@@ -247,6 +253,8 @@ public class AdminServlet extends HttpServlet {
 		
 		User user = (User)request.getSession().getAttribute("user");
 		request.setAttribute("IS_SUPERADMIN", dbUtil.isSuperAdmin(user.getEmail()));
+		request.setAttribute("ADMINS", dbUtil.getAdmins());
+		request.setAttribute("CONTESTS", filterUpcomingContests(dbUtil.fetchContests()));
 		
 		RequestDispatcher rd = request.getRequestDispatcher("admin.jsp");
 		rd.forward(request, response);
@@ -266,8 +274,7 @@ public class AdminServlet extends HttpServlet {
 			}
 			if(ct_id != -1) {
 				dbUtil.removeContest(ct_id);
-				response.sendRedirect("dashboard");
-				return;
+				request.setAttribute("MESSAGE", "Contest removal successful");
 			}
 		}
 		
@@ -276,7 +283,63 @@ public class AdminServlet extends HttpServlet {
 		
 		User user = (User)request.getSession().getAttribute("user");
 		request.setAttribute("IS_SUPERADMIN", dbUtil.isSuperAdmin(user.getEmail()));
+		request.setAttribute("ADMINS", dbUtil.getAdmins());
+		request.setAttribute("CONTESTS", filterUpcomingContests(dbUtil.fetchContests()));
 		
+		RequestDispatcher rd = request.getRequestDispatcher("admin.jsp");
+		rd.forward(request, response);
+	}
+	
+	private void removeAdmin(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		String username = request.getParameter("admin");
+		if(username == null) {
+			request.setAttribute("ERROR", "Invalid Request");
+		} else if(!dbUtil.usernameExists(username)) {
+			request.setAttribute("ERROR", "This username does not exist");
+		} else {
+			if(dbUtil.isSuperAdmin(dbUtil.getUserByUsername(username).getEmail())) {
+				request.setAttribute("ERROR", "Can not remove a superadmin");
+			} else {
+				dbUtil.removeAdmin(username);
+				request.setAttribute("MESSAGE", "Admin removed successfully");
+			}
+		}
+		
+		//Mode 3 for third tab
+		request.setAttribute("MODE", 3);
+		
+		User user = (User)request.getSession().getAttribute("user");
+		request.setAttribute("IS_SUPERADMIN", dbUtil.isSuperAdmin(user.getEmail()));
+		request.setAttribute("ADMINS", dbUtil.getAdmins());
+		request.setAttribute("CONTESTS", filterUpcomingContests(dbUtil.fetchContests()));
+				
+		RequestDispatcher rd = request.getRequestDispatcher("admin.jsp");
+		rd.forward(request, response);
+	}
+	
+	private void addAdmin(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		String username = request.getParameter("username");
+		if(username == null) {
+			request.setAttribute("ERROR", "Invalid Request");
+		} else if(!dbUtil.usernameExists(username)) {
+			request.setAttribute("ERROR", "This username does not exist");
+		} else {
+			if(dbUtil.isSuperAdmin(dbUtil.getUserByUsername(username).getEmail())) {
+				request.setAttribute("ERROR", "This user is already a superadmin");
+			} else {
+				dbUtil.addAdmin(username);
+				request.setAttribute("MESSAGE", "Admin added successfully");
+			}
+		}
+		
+		//Mode 3 for third tab
+		request.setAttribute("MODE", 3);
+		
+		User user = (User)request.getSession().getAttribute("user");
+		request.setAttribute("IS_SUPERADMIN", dbUtil.isSuperAdmin(user.getEmail()));
+		request.setAttribute("ADMINS", dbUtil.getAdmins());
+		request.setAttribute("CONTESTS", filterUpcomingContests(dbUtil.fetchContests()));
+				
 		RequestDispatcher rd = request.getRequestDispatcher("admin.jsp");
 		rd.forward(request, response);
 	}
