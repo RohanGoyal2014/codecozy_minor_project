@@ -59,4 +59,24 @@
     <servlet-name>AdminServlet</servlet-name>
     <url-pattern>/AdminServlet</url-pattern>
   </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>ContestsControllerServlet</display-name>
+    <servlet-name>ContestsControllerServlet</servlet-name>
+    <servlet-class>tech.codecozy.app.ContestsControllerServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ContestsControllerServlet</servlet-name>
+    <url-pattern>/ContestsControllerServlet</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>ProblemControllerServlet</display-name>
+    <servlet-name>ProblemControllerServlet</servlet-name>
+    <servlet-class>tech.codecozy.app.ProblemControllerServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ProblemControllerServlet</servlet-name>
+    <url-pattern>/ProblemControllerServlet</url-pattern>
+  </servlet-mapping>
 </web-app>

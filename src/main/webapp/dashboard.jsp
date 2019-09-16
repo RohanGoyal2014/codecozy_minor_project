@@ -46,7 +46,7 @@
 									<h5>${ pc.name }</h5>
 									<b>Start Time:</b> ${ pc.startDateTime }
 								</li>	
-								<a href="contests/id=${ pc.id }" style="color:#03A9F4">Enter</a>
+								<a href="contests?id=${ pc.id }" style="color:#03A9F4">Enter</a>
 							</c:forEach>
 						</ol>
 					</c:otherwise>
@@ -65,7 +65,7 @@
 									<h5>${ pc.name }</h5>
 									<b>Start Time:</b> ${ pc.startDateTime }
 								</li>	
-								<a href="contests/id=${ pc.id }" style="color:#03A9F4">Enter</a>
+								<a href="contests?id=${ pc.id }" style="color:#03A9F4">Enter</a>
 							</c:forEach>
 						</ol>
 					</c:otherwise>
@@ -85,7 +85,7 @@
 									<h5>${ pc.name }</h5>
 									<b>Start Time:</b> ${ pc.startDateTime }
 								</li>	
-								<a href="contests/id=${ pc.id }" style="color:#03A9F4">Enter</a>
+								<a href="contests?id=${ pc.id }" style="color:#03A9F4">Enter</a>
 							</c:forEach>
 						</ol>
 					</c:otherwise>

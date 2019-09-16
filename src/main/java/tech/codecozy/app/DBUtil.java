@@ -712,4 +712,160 @@ public class DBUtil {
 			CloudConfig.close(conn, stmt, rs);
 		}
 	}
+	
+	boolean contestExists(String id) {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			String sql = "select count(*) 'count' from contest where ct_id=?";
+			
+			stmt = conn.prepareStatement(sql);
+			stmt.setString(1, id);
+			
+			rs = stmt.executeQuery();
+			
+			if(rs.next()) {
+				if(rs.getInt("count")>0) return true;
+			}
+			
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
+		
+		return false;
+	}
+	
+	ArrayList<Problem> getProblems(String id) {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		ArrayList<Problem> problems = new ArrayList<>();
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			String sql = "select * from problem where ct_id=?";
+			
+			stmt = conn.prepareStatement(sql);
+			stmt.setString(1, id);
+			
+			rs = stmt.executeQuery();
+			
+			while(rs.next()) {
+				long pbID = rs.getLong("pb_id");
+				String name = rs.getString("pb_name");
+				String link = rs.getString("pb_description");
+				problems.add(new Problem(pbID,name,link,Long.parseLong(id)));
+			}
+			
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
+		
+		return problems;
+	}
+	
+	Contest getContest(String id) {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			String sql = "select * from contest where ct_id=?";
+			
+			stmt = conn.prepareStatement(sql);
+			stmt.setString(1, id);
+			
+			rs = stmt.executeQuery();
+			
+			if(rs.next()) {
+				String name = rs.getString("ct_name");
+				long start = rs.getLong("ct_start");
+				long end = rs.getLong("ct_end");
+				String editorialLink = rs.getString("ct_editorial_link");
+				return new Contest(Long.parseLong(id),name,start,end,null,null,editorialLink);
+			}
+			
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
+		
+		return null;
+	}
+	
+	boolean problemExists(String id) {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			String sql = "select count(*) 'count' from problem where pb_id=?";
+			
+			stmt = conn.prepareStatement(sql);
+			stmt.setString(1, id);
+			
+			rs = stmt.executeQuery();
+			
+			if(rs.next()) {
+				if(rs.getInt("count")>0) return true;
+			}
+			
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
+		
+		return false;
+	}
+	
+	Problem getProblem(String id) {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			String sql = "select * from problem where pb_id=?";
+			
+			stmt = conn.prepareStatement(sql);
+			stmt.setString(1, id);
+			
+			rs = stmt.executeQuery();
+			
+			if(rs.next()) {
+				String name = rs.getString("pb_name");
+				String link = rs.getString("pb_description");
+				long ctID = rs.getLong("ct_id");
+				return new Problem(Long.parseLong(id),name,link,ctID);
+			}
+			
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
+		
+		return null;
+	}
 }
