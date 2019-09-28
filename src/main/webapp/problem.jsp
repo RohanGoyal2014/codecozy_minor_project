@@ -72,6 +72,9 @@
 		<c:if test="${CONTEST.start <= CURRENT_TIMESTAMP }">
 			<a href="${ PROBLEM.link }" class="btn-link" target="_blank">View Problem</a>
 			<br>
+		</c:if>
+		<c:if test="${CONTEST.start<=CURRENT_TIMESTAMP && CURRENT_TIMESTAMP<=CONTEST.end }">
+		</c:if>
 			<br>
 			<select id="language">
 				<option value="c_c++">C++</option>
@@ -80,21 +83,32 @@
 			</select>
 			<div id="editor"style="width:100%;height:60vh"></div>
 			<script src="public/ace.js" type="text/javascript" charset="utf-8"></script>
+			<textarea id="custom-input" rows="7"style="width:100%" placeholder="Custom Input Here"></textarea>
 			
-			<button class="btn btn-success" type="submit" style="background:#8BC34A;border:0px;margin-top:10px">Compile & Run</button>
-			<button class="btn btn-primary" type="submit" style="border:0px;margin-top:10px">Submit</button>
+			<button class="btn btn-success" onclick='doCompilation()' type="submit" style="background:#8BC34A;border:0px;margin-top:10px">Compile & Run</button>
+			<button class="btn btn-primary" onclick='doSubmission("${PROBLEM.id}")' type="submit" style="border:0px;margin-top:10px">Submit</button>
 <script>
     var editor = ace.edit("editor");
     editor.setTheme("ace/theme/monokai");
     editor.session.setMode("ace/mode/c_cpp");
-document.getElementById('editor').style.fontSize='18px';
-editor.resize();
-$('#language').change(function(){
-    editor.session.setMode("ace/theme/"+document.getElementById('language').value);
-});
+	document.getElementById('editor').style.fontSize='18px';
+	editor.resize();
+	$('#language').change(function(){
+	    editor.session.setMode("ace/theme/"+document.getElementById('language').value);
+	});
+	
+ 	function doCompilation() {
+ 		const customInput = document.getElementById('custom-input').value;
+ 		const code = editor.getSession().getValue();
+ 		const language = document.getElementById('language').value;
+ 		// console.log(language);
+ 		$.post( "problem", { command: "compile_code", sourceCode: code, stdin: customInput,lang: language }, function(data) {
+			console.log(data);
+			data = JSON.parse(data);
+		});
+ 	}
 
 </script>
-		</c:if>
 		<br>
 		<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
 	</div>
