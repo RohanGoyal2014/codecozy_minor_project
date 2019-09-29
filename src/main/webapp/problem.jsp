@@ -127,6 +127,74 @@
 						</div>
 					</div>
 				</div>
+				<div class="container-fluid" id="submission_result"style="display:none">
+					<div class="row" id="compiled_and_run_2"style="padding-top:15px;border-bottom:0.5px solid black;padding-bottom:10px">
+						<div class="col-sm-1">
+							<image src="public/green_tick.png"width="60px">	
+						</div>
+						<div class="col-md-11">
+							<section style="font-size:24px;padding-top:15px">Executed</section>
+						</div>
+					</div>
+					<div class="row" style="padding:25px">
+					<h3 id="submission_score">Score:0</h3>										
+					</div>
+					<div class="row" style="margin-top:25px" style="display:none" id="sb_err">
+						<div class="col-sm-12">							
+							<textarea id="submission_error"style="font-size:20px;width:100%;border:none;background:none;resize:none;overflow-y:hidden" disabled>
+							</textarea>
+						</div>
+					</div>
+					<div class="row" style="padding:25px">
+						<div class="col-sm-8">
+						<strong>Inputs</strong>
+						</div>
+						<div class="col-sm-4">
+						<strong>Result</strong>
+						</div>
+					</div>
+					<div class="row" style="padding:25px">
+						<div class="col-sm-8">
+						Input 1
+						</div>
+						<div class="col-sm-4" id="submission_res1">
+						AC
+						</div>
+					</div>
+					<div class="row" style="padding:25px">
+						<div class="col-sm-8">
+						Input 2
+						</div>
+						<div class="col-sm-4" id="submission_res2">
+						AC
+						</div>
+					</div>
+					<div class="row" style="padding:25px">
+						<div class="col-sm-8">
+						Input 3
+						</div>
+						<div class="col-sm-4" id="submission_res3">
+						AC
+						</div>
+					</div>
+					<div class="row" style="padding:25px">
+						<div class="col-sm-8">
+						Input 4
+						</div>
+						<div class="col-sm-4" id="submission_res4">
+						AC
+						</div>
+					</div>
+					<div class="row" style="padding:25px">
+						<div class="col-sm-8">
+						Input 5
+						</div>
+						<div class="col-sm-4" id="submission_res5">
+						AC
+						</div>
+					</div>
+					
+				</div>
 			</div>
 	
 <script>
@@ -150,6 +218,7 @@
  		const language = document.getElementById('language').value;
  		document.getElementById('evaluating').style.display='flex';
  		document.getElementById('test_result').style.display='none';
+ 		document.getElementById('submission_result').style.display='none';
  		// console.log(language);
  		$.post( "problem", { command: "compile_code", sourceCode: code, stdin: customInput,lang: language }, function(data) {
 			data = JSON.parse(data);
@@ -172,6 +241,59 @@
 			auto_grow(document.getElementById('test_output'));
 			
 		});
+ 	}
+ 	
+ 	function doSubmission(pid) {
+ 		const code = editor.getSession().getValue();
+ 		const language = document.getElementById('language').value;
+ 		document.getElementById('evaluating').style.display='flex';
+ 		document.getElementById('test_result').style.display='none';
+ 		document.getElementById('submission_result').style.display='none';
+ 		document.getElementById('sb_err').style.display='none';
+ 		// console.log(language);
+ 		try {
+	 		$.post( "problem", { command: "submit_code", sourceCode: code,lang: language, problem: pid }, function(data) {
+	 			//console.log(data);
+	 			
+	 			data = JSON.parse(data);
+	 			var error = '';
+	 			
+				//console.log(data);
+				document.getElementById('evaluating').style.display='none';	
+				document.getElementById('submission_result').style.display='block';
+				var c=0;
+				for(var i=0;i<data.length;++i) {
+					curr = JSON.parse(data[i]);
+					cmpFail = curr['cmpFailed'][0];
+					cmpError = curr['cmpError'];
+					rntError = curr['rntError'];
+					output = curr['result'];
+					var id=i+1;
+					id='submission_res'+id;
+					if(cmpFail === true) {
+						error=cmpError[0];
+						document.getElementById(id).innerHTML = 'CE';
+					} else if(rntError == null) {
+						document.getElementById(id).innerHTML = output[0];
+						c+=1;
+					} else {
+						document.getElementById(id).innerHTML = 'RE';
+						error=rntError[0];
+					}
+				}
+				score = 'Score:'+c*20;
+				document.getElementById('submission_score').innerHTML=score;
+				if(error==='') {
+					//nothing
+				} else {
+					document.getElementById('sb_err').style.display='block';
+					document.getElementById('submission_error').innerHTML = 'Error:\n'+error;
+					auto_grow(document.getElementById('submission_error'));
+				}
+			});
+ 		} catch(err) {
+ 			console.log(err);
+ 		}
  	}
  	
  	

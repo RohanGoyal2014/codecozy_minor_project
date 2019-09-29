@@ -869,4 +869,79 @@ public class DBUtil {
 		return null;
 	}
 	
+	ArrayList<TestCase> getTestCasesByProblem(long problemId) {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		ArrayList<TestCase> testCases = new ArrayList<>();
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			String sql = "select * from test_case where pb_id=? order by tc_id";
+			
+			stmt = conn.prepareStatement(sql);
+			stmt.setLong(1, problemId);
+			
+			rs = stmt.executeQuery();
+			
+			while(rs.next()) {
+				long tcId = rs.getLong("tc_id");
+				String inputPath = rs.getString("tc_input");
+				String outputPath = rs.getString("tc_output");
+				testCases.add(new TestCase(tcId,problemId,inputPath,outputPath));
+			}
+			
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
+		
+		return testCases;
+
+	}
+	
+	public void makeSubmission(Submission submission) {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			String sql = "insert into submission(pb_id,sb_time,sb_link,cp_email,score) values(?,?,?,?,?)";
+			
+			stmt = conn.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS);
+			stmt.setLong(1, submission.getProblemId());
+			stmt.setLong(2, submission.getTime());
+			stmt.setString(3, submission.getLink());
+			stmt.setString(4, submission.getEmail());
+			stmt.setInt(5, submission.getScore());
+			
+			stmt.execute();
+			rs = stmt.getGeneratedKeys();
+			
+			if(rs.next()) {
+				for(int i=0;i<submission.getTcId().size();++i) {
+					sql = "insert into submission_breakup(sb_id,tc_id,verdict) values(?,?,?)";
+					PreparedStatement stmt2 = conn.prepareStatement(sql);
+					stmt2.setLong(1, rs.getLong(1));
+					stmt2.setLong(2, submission.getTcId().get(i));
+					stmt2.setString(3, submission.getVerdict().get(i));
+					stmt2.execute();
+					stmt2.close();
+				}
+				
+			}
+			
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
+	}
+	
 }
