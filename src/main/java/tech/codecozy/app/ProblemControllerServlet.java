@@ -126,7 +126,6 @@ public class ProblemControllerServlet extends HttpServlet {
 		Unirest.shutDown();
 		
 		JSONObject json = new JSONObject(apiResponse);
-//		System.out.println(json);
 		response.getWriter().write(json.toString());
 	}
 
