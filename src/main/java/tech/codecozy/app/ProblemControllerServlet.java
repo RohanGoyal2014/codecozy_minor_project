@@ -106,6 +106,9 @@ public class ProblemControllerServlet extends HttpServlet {
 				case "submit_code":
 					submitCode(request, response);
 					break;
+				case "download_test_files":
+					downloadTestFiles(request, response);
+					break;
 				default:
 					doGet(request, response);
 				}
@@ -148,6 +151,13 @@ public class ProblemControllerServlet extends HttpServlet {
 		String language = request.getParameter("lang");
 		String sourceCode = request.getParameter("sourceCode");
 		if(!dbUtil.problemExists(String.valueOf(problemId)) || language==null || sourceCode == null ) {
+			JSONObject json = new JSONObject("{error:Invalid Request}");
+			response.getWriter().write(json.toString());
+			return;
+		}
+		Problem problem = dbUtil.getProblem(String.valueOf(problemId));
+		Contest contest = dbUtil.getContest(String.valueOf(problem.getContestId()));
+		if(contest.getStart()>System.currentTimeMillis() && System.currentTimeMillis()>contest.getEnd()) {
 			JSONObject json = new JSONObject("{error:Invalid Request}");
 			response.getWriter().write(json.toString());
 			return;
@@ -248,6 +258,35 @@ public class ProblemControllerServlet extends HttpServlet {
 			if(!a1.get(i).equals(a2.get(i))) return false;
 		}
 		return true;
+	}
+	
+	private void downloadTestFiles(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		
+		long problemId = Integer.parseInt(request.getParameter("problem"));
+		JSONObject jsonObject = new JSONObject();
+		if(!dbUtil.problemExists(String.valueOf(problemId))) {
+			jsonObject.append("error", true);
+		} else {
+			
+			Problem problem = dbUtil.getProblem(String.valueOf(problemId));
+			Contest contest = dbUtil.getContest(String.valueOf(problem.getContestId()));
+			if(contest.getEnd()>=System.currentTimeMillis()) {
+				jsonObject.append("error", true);
+			} else {
+				jsonObject.append("error",false);
+				ArrayList<TestCase> tcs = dbUtil.getTestCasesByProblem(problemId);
+				int c=0;
+				for(TestCase tc:tcs) {
+					++c;
+					String input = new String(Files.readAllBytes(Paths.get(tc.getInputPath()))); 
+				    String output = new String(Files.readAllBytes(Paths.get(tc.getOutputPath())));
+				    jsonObject.append("input"+String.valueOf(c), input);
+				    jsonObject.append("output"+String.valueOf(c), output);
+				}
+			}
+		}
+		response.getWriter().write(jsonObject.toString());
+		
 	}
 
 }

@@ -74,7 +74,7 @@
 			<br>
 		</c:if>
 		<c:if test="${CONTEST.start<=CURRENT_TIMESTAMP && CURRENT_TIMESTAMP<=CONTEST.end }">
-		</c:if>
+		
 			<br>
 			<select id="language">
 				<option value="c_c++">C++</option>
@@ -299,6 +299,43 @@
  	
 
 </script>
+</c:if>
+<c:if test="${CONTEST.end<CURRENT_TIMESTAMP }">
+<br><br><br><hr>
+		<button class="btn btn-primary" type="submit" onclick='downloadTestFiles("${PROBLEM.id}")'>Download Test Files</button>
+		
+		<script type="text/javascript" 
+		src="public/jszip.min.js"></script>
+		<script type="text/javascript" 
+		src="public/FileSaver.min.js"></script>
+		<script>
+			function downloadTestFiles(id) {
+				$.post( "problem", { command: "download_test_files", problem: id }, function(data) {
+					data=JSON.parse(data);
+					//console.log(data);
+					var err=data.error[0];
+					
+					if(err) {
+						alert('Download Error');
+					} else {
+						var zip = new JSZip();
+						keys = Object.keys(data);
+						//console.log(keys);
+						for(var i=0;i<keys.length;++i) {
+							if(keys[i]!=='error') {
+								zip.file(keys[i]+'.txt',data[keys[i]][0]);
+							}
+						}
+						zip.generateAsync({type:"blob"}).then(function(content) {
+						    // see FileSaver.js
+						    saveAs(content, "problem"+id+"_tcs.zip");
+						});
+					}
+					
+				});
+			}
+		</script>
+</c:if>
 		<br>
 		<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
 	</div>
