@@ -89,4 +89,14 @@
     <servlet-name>LeaderboardControllerServlet</servlet-name>
     <url-pattern>/LeaderboardControllerServlet</url-pattern>
   </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>ForumControllerServlet</display-name>
+    <servlet-name>ForumControllerServlet</servlet-name>
+    <servlet-class>tech.codecozy.app.ForumControllerServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ForumControllerServlet</servlet-name>
+    <url-pattern>/ForumControllerServlet</url-pattern>
+  </servlet-mapping>
 </web-app>

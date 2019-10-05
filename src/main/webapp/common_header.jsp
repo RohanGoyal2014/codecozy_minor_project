@@ -14,6 +14,7 @@
             <a href="dashboard" class="nav-item nav-link">Contests</a>
             <a href="profile" class="nav-item nav-link">My Profile</a>
             <a href="search" class="nav-item nav-link">Search</a>
+            <a href="discuss" class="nav-item nav-link">Forums</a>
         </div>
         <div class="navbar-nav ml-auto">
         	<form method="post" action="accounts" id="logoutForm">
