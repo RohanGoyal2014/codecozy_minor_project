@@ -7,7 +7,11 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 public class DBUtil {
 	
@@ -383,6 +387,35 @@ public class DBUtil {
 			if(rs.next()) {
 				user = new User(rs.getString("cp_fname"),rs.getString("cp_lname"),
 						rs.getString("cp_email"),username,null,rs.getString("cp_gender").charAt(0));
+			}
+				
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
+		return user;
+	}
+	
+	User getUserByEmail(String email) {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		User user = null;
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			String sql = "select * from cp_user where cp_email=?";
+			
+			stmt = conn.prepareStatement(sql);
+			stmt.setString(1, email);
+		
+			rs = stmt.executeQuery();
+			
+			if(rs.next()) {
+				user = new User(rs.getString("cp_fname"),rs.getString("cp_lname"),
+						rs.getString("cp_email"),rs.getString("cp_username"),null,rs.getString("cp_gender").charAt(0));
 			}
 				
 		} catch(Exception e) {
@@ -903,7 +936,7 @@ public class DBUtil {
 
 	}
 	
-	public void makeSubmission(Submission submission) {
+	void makeSubmission(Submission submission) {
 		Connection conn = null;
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
@@ -944,4 +977,151 @@ public class DBUtil {
 		}
 	}
 	
+	ArrayList<Submission> getSubmissions(long problemId, String email) {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		ArrayList<Submission> submissions = new ArrayList<>();
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			String sql = "select * from submission where pb_id=? and cp_email=? order by sb_time desc";
+			stmt = conn.prepareStatement(sql);
+			stmt.setLong(1, problemId);
+			stmt.setString(2, email);
+			
+			rs = stmt.executeQuery();
+			
+			while(rs.next()) {
+				String link = rs.getString("sb_link");
+				long id = rs.getLong("sb_id");
+				long time = rs.getLong("sb_time");
+				int score = rs.getInt("score");
+				Submission sm = new Submission(id,problemId,time,link,email,null,null);
+				sm.setScore(score);
+				submissions.add(sm);
+				
+			}
+			
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
+		return submissions;
+	}
+	
+	
+	ArrayList<Submission> getAllSubmissions(long problemId) {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		ArrayList<Submission> submissions = new ArrayList<>();
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			String sql = "select * from submission where pb_id=? order by cp_email,sb_time desc";
+			stmt = conn.prepareStatement(sql);
+			stmt.setLong(1, problemId);
+			
+			rs = stmt.executeQuery();
+			
+			while(rs.next()) {
+				String link = rs.getString("sb_link");
+				long id = rs.getLong("sb_id");
+				long time = rs.getLong("sb_time");
+				int score = rs.getInt("score");
+				String email = rs.getString("cp_email");
+				Submission sm = new Submission(id,problemId,time,link,email,null,null);
+				sm.setScore(score);
+				submissions.add(sm);
+				
+			}
+			
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
+		return submissions;
+	}
+	
+	Contest getContestByProblemId(long problemId) {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		
+		try {
+			conn = CloudConfig.getConnection();
+			
+			String sql = "select ct_id from problem where pb_id=?";
+			stmt = conn.prepareStatement(sql);
+			stmt.setLong(1, problemId);
+			
+			rs = stmt.executeQuery();
+			
+			if(rs.next()) {
+				long contestId = rs.getLong("ct_id");
+				return this.getContest(String.valueOf(contestId));
+				
+			}
+			
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
+		return null;
+	}
+	
+	HashMap<Long,Integer> getParticipatedContestsByUsername(String username) {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		HashMap<Long,Integer> map = new HashMap<>();
+		
+		try {
+			conn = CloudConfig.getConnection();
+			User user = this.getUserByUsername(username);
+			
+			String sql = "select pb_id,score from submission where cp_email=?";
+			stmt = conn.prepareStatement(sql);
+			stmt.setString(1, user.getEmail());
+			
+			rs = stmt.executeQuery();
+			
+			HashMap<Long,Integer> problemToScoreMap = new HashMap<>();
+			
+			while(rs.next()) {
+				long problemId = rs.getLong("pb_id");
+				if(!problemToScoreMap.containsKey(problemId)) {
+					problemToScoreMap.put(problemId, 0);
+				}
+				
+				int curr = problemToScoreMap.get(problemId);
+				problemToScoreMap.replace(problemId, Integer.max(curr, rs.getInt("score")));
+			}
+			
+			for(Map.Entry<Long, Integer> mp: problemToScoreMap.entrySet()) {
+				Contest contest = this.getContestByProblemId(mp.getKey());
+				if(!map.containsKey(contest.getId())) {
+					map.put(contest.getId(), 0);
+				}
+				int curr = map.get(contest.getId());
+				map.replace(contest.getId(), curr+mp.getValue());
+			}
+			
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			CloudConfig.close(conn, stmt, rs);
+		}
+		return map;
+	}
 }

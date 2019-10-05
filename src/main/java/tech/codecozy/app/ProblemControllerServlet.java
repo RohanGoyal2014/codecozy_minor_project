@@ -109,6 +109,9 @@ public class ProblemControllerServlet extends HttpServlet {
 				case "download_test_files":
 					downloadTestFiles(request, response);
 					break;
+				case "get_submissions":
+					getSubmissions(request, response);
+					break;
 				default:
 					doGet(request, response);
 				}
@@ -287,6 +290,21 @@ public class ProblemControllerServlet extends HttpServlet {
 		}
 		response.getWriter().write(jsonObject.toString());
 		
+	}
+	
+	private void getSubmissions(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		long problemId = Long.parseLong(request.getParameter("problem"));
+		
+		if(!dbUtil.problemExists(String.valueOf(problemId))) {
+			JSONObject jsonObject = new JSONObject();
+			jsonObject.append("error", true);
+			response.getWriter().write(jsonObject.toString());
+		} else {
+			User user = (User)request.getSession().getAttribute("user");
+			String email = user.getEmail();
+			ArrayList<Submission> submissions  = dbUtil.getSubmissions(problemId, email);
+			response.getWriter().write(new Gson().toJson(submissions));
+		}
 	}
 
 }

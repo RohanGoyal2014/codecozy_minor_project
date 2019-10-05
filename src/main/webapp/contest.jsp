@@ -18,6 +18,7 @@
 	
 		<div class="jumbotron">
 		<h2><b>${CONTEST.name }</b></h2>
+		<a class="btn-link" href="leaderboard?id=${CONTEST.id }"target="_blank">View Leaderboard</a>
 		</div>
 	<c:if test="${ CONTEST.start<=CURRENT_TIMESTAMP }">
 			<div style="position:fixed;bottom:0;right:0;padding:15px;background:#EEEEFF;border:5px solid black"><h4 id="time_rem"></h4>

@@ -27,6 +27,7 @@ public class Submission {
 	}
 	
 	private int computeScore() {
+		if(verdict == null) return 0;
 		int c=0;
 		for(String v:verdict) {
 			if(v.equals("AC")) ++c; 
@@ -37,6 +38,10 @@ public class Submission {
 	
 	public int getScore() {
 		return score;
+	}
+	
+	public void setScore(int score) {
+		this.score = score;
 	}
 
 	public ArrayList<String> getVerdict() {

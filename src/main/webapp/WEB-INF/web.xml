@@ -79,4 +79,14 @@
     <servlet-name>ProblemControllerServlet</servlet-name>
     <url-pattern>/ProblemControllerServlet</url-pattern>
   </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>LeaderboardControllerServlet</display-name>
+    <servlet-name>LeaderboardControllerServlet</servlet-name>
+    <servlet-class>tech.codecozy.app.LeaderboardControllerServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>LeaderboardControllerServlet</servlet-name>
+    <url-pattern>/LeaderboardControllerServlet</url-pattern>
+  </servlet-mapping>
 </web-app>

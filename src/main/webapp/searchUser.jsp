@@ -54,7 +54,7 @@
 					var last="";
 					for(var i=0;i<matches.length;++i) {
 						last=last+
-							"<div class=\"container-fluid\"style=\"padding:10px;border:0.1px solid #EEEEEE;cursor:pointer;\" onMouseOut=\"this.style.background='#FFFFFF'\" onMouseOver=\"this.style.background='#EEEEEE'\" onclick=\"window.location.href='profile?user="+ matches[i] +"'\">"+ matches[i] +"</div>";
+							"<div class=\"container-fluid\"style=\"padding:10px;border:0.1px solid #EEEEEE;cursor:pointer;\" onMouseOut=\"this.style.background='#FFFFFF'\" onMouseOver=\"this.style.background='#EEEEEE'\" onclick=\"window.open('profile?user="+ matches[i] +"')\">"+ matches[i] +"</div>";
 						document.getElementById('suggestions').innerHTML=last;
 					}
 				}

@@ -71,8 +71,64 @@
 	
 		<c:if test="${CONTEST.start <= CURRENT_TIMESTAMP }">
 			<a href="${ PROBLEM.link }" class="btn-link" target="_blank">View Problem</a>
-			<br>
 		</c:if>
+			<button id="btn_get_submissions"onclick='showSubmissions("${PROBLEM.id}")' data-toggle="collapse" data-target="#show_submissions" class="btn btn-primary"style="margin-left:25px">Show Submissions</button>
+		
+<div id="show_submissions" class="collapse container-fluid" style="margin-top:50px">
+
+</div>
+<script>
+	function showSubmissions(pid) {
+		state = $('#show_submissions').css('display');
+		if(state === 'none') {
+			$.post( "problem", { command: "get_submissions", problem: pid }, function(data) {
+				data = JSON.parse(data);
+				console.log(data);
+				if(data.length === 0) {
+					
+					document.getElementById('show_submissions').innerHTML='<h4>No Submissions to show...</h4>';
+				} else {
+					time = new Date().getTime();
+					var str='';
+					for(var i=0;i<data.length;++i) {
+						str+='<tr>';
+						str+='<td>';
+						diff = parseInt((time-data[i].time)/1000);
+						//console.log(diff)
+						min = parseInt(diff/60);
+						hr = parseInt(min/60);
+						days = parseInt(hr/24);
+						months = parseInt(days/30);
+						year = parseInt(months/12);
+						if(year!==0) str+=year+' yrs ago';
+						else if(months!==0) str+=months+' months ago';
+						else if(days!==0) str+=days+' days ago';
+						else if(hr!==0) str+=hr+' hrs ago';
+						else if(min!==0) str+=min+' mins ago';
+						else str+=diff+' secs ago';
+						//str+=(time-data[i].time)/60000;
+						str+='</td>';
+						str+='<td>';
+						str+=data[i].score
+						str+='</td>';
+						str+='<td>';
+						str+='<a href="'+data[i].link+'" class="link"target="_blank">View</a>';
+						str+='</td>';
+						str+='</tr>'
+					}
+					document.getElementById('show_submissions').innerHTML='<table class="table"><tbody>'+str+'</tbody></table>';
+					console.log(new Date().getTime());
+					document.getElementById('btn_get_submissions').innerHTML='Hide Submissions';
+					
+				}
+				
+			});
+		} else {
+			document.getElementById('btn_get_submissions').innerHTML='Show Submissions';
+		}
+	}
+</script>
+			<br>
 		<c:if test="${CONTEST.start<=CURRENT_TIMESTAMP && CURRENT_TIMESTAMP<=CONTEST.end }">
 		
 			<br>
@@ -275,7 +331,9 @@
 						document.getElementById(id).innerHTML = 'CE';
 					} else if(rntError == null) {
 						document.getElementById(id).innerHTML = output[0];
-						c+=1;
+						if(output[0]==='AC') {
+							c+=1;
+						}
 					} else {
 						document.getElementById(id).innerHTML = 'RE';
 						error=rntError[0];
